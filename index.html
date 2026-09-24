@@ -405,3 +405,28 @@
   </script>
 </body>
 </html>
+localStorage.setItem('lastWatched', JSON.stringify({
+  id: activeMedia.id,
+  title: activeMedia.title,
+  season: activeSeason,
+  episode: activeEpisode,
+  timestamp: Date.now()
+}));
+// Fetch exact season count and episode list dynamically
+async function loadSeasonData(tvId, seasonNumber) {
+  const res = await fetch(`https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?api_key=${TMDB_KEY}`);
+  const data = await res.json();
+  
+  // Render exact number of episodes with their actual titles
+  const grid = document.getElementById('episodeGrid');
+  grid.innerHTML = '';
+  data.episodes.forEach(ep => {
+    const btn = document.createElement('button');
+    btn.innerText = `E${ep.episode_number}: ${ep.name}`;
+    btn.onclick = () => {
+      activeEpisode = ep.episode_number;
+      updatePlayerSource();
+    };
+    grid.appendChild(btn);
+  });
+}
