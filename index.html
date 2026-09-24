@@ -1,2459 +1,2005 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>CinemaHub - Movies, TV & Anime</title>
+    <title>CinemaHub</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <style>
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
+    <style>
+        body {
+            background: #09090b;
+            color: white;
+        }
 
-    ::-webkit-scrollbar-track {
-      background: #09090b;
-    }
+        .card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
 
-    ::-webkit-scrollbar-thumb {
-      background: #27272a;
-      border-radius: 4px;
-    }
+        .card:hover {
+            transform: translateY(-4px);
+        }
 
-    ::-webkit-scrollbar-thumb:hover {
-      background: #3f3f46;
-    }
-  </style>
+        .provider-btn.active {
+            background: #dc2626;
+            color: white;
+        }
+
+        .episode-btn.active {
+            background: #dc2626;
+            color: white;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        .scrollbar-hide {
+            scrollbar-width: none;
+        }
+    </style>
 </head>
 
-<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans selection:bg-red-600 selection:text-white">
+<body class="min-h-screen">
 
-  <!-- =========================
-       NAVIGATION
-  ========================== -->
+<!-- NAVBAR -->
+<nav class="sticky top-0 z-50 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">
+    <div class="max-w-7xl mx-auto px-4 py-4">
 
-  <header class="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800/80 px-4 lg:px-8 py-3.5">
-    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <div class="flex flex-col md:flex-row md:items-center gap-4">
 
-      <div class="flex items-center gap-6">
+            <div class="text-2xl font-bold text-red-500">
+                CinemaHub
+            </div>
 
-        <button
-          id="homeButton"
-          type="button"
-          class="flex items-center gap-2 group"
-          aria-label="Go home"
-        >
-          <div class="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center font-black text-xl text-white shadow-lg shadow-red-600/30 group-hover:scale-105 transition">
-            ▶
-          </div>
+            <div class="flex gap-2 overflow-x-auto scrollbar-hide">
+                <button
+                    class="category-btn px-4 py-2 rounded-lg bg-red-600"
+                    data-category="trending">
+                    Trending
+                </button>
 
-          <span class="text-xl font-black tracking-wider text-white">
-            CINEMA<span class="text-red-600">HUB</span>
-          </span>
-        </button>
+                <button
+                    class="category-btn px-4 py-2 rounded-lg bg-zinc-800"
+                    data-category="movie">
+                    Movies
+                </button>
 
-        <nav class="hidden md:flex items-center gap-1 text-sm font-semibold text-zinc-400">
-          <button
-            type="button"
-            class="nav-tab px-3 py-1.5 rounded-lg text-white bg-zinc-800"
-            data-cat="trending"
-          >
-            Trending
-          </button>
+                <button
+                    class="category-btn px-4 py-2 rounded-lg bg-zinc-800"
+                    data-category="tv">
+                    TV Series
+                </button>
 
-          <button
-            type="button"
-            class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition"
-            data-cat="movie"
-          >
-            Movies
-          </button>
+                <button
+                    class="category-btn px-4 py-2 rounded-lg bg-zinc-800"
+                    data-category="anime">
+                    Anime
+                </button>
+            </div>
 
-          <button
-            type="button"
-            class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition"
-            data-cat="tv"
-          >
-            TV Series
-          </button>
+            <div class="md:ml-auto flex gap-2">
+                <input
+                    id="searchInput"
+                    type="text"
+                    placeholder="Search movies, shows, anime..."
+                    class="w-full md:w-72 px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 outline-none focus:border-red-500"
+                >
 
-          <button
-            type="button"
-            class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition"
-            data-cat="anime"
-          >
-            Anime
-          </button>
-        </nav>
-      </div>
+                <button
+                    id="searchBtn"
+                    class="px-4 py-2 bg-red-600 rounded-lg">
+                    Search
+                </button>
+            </div>
 
-      <!-- Search -->
-      <div class="relative flex-1 max-w-md">
-        <input
-          id="searchInput"
-          type="search"
-          autocomplete="off"
-          placeholder="Search movies, TV shows, anime..."
-          class="w-full bg-zinc-900 border border-zinc-800 focus:border-red-600 rounded-full pl-10 pr-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none transition shadow-inner"
-        >
-
-        <span class="absolute left-3.5 top-2.5 text-zinc-500 text-sm">
-          🔍
-        </span>
-      </div>
-
-      <!-- Manual ID -->
-      <button
-        id="customIdButton"
-        type="button"
-        class="text-xs bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-200 transition hidden sm:inline-block"
-      >
-        Custom ID
-      </button>
+        </div>
     </div>
-  </header>
+</nav>
 
 
-  <!-- =========================
-       PLAYER
-  ========================== -->
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-4 py-8">
 
-  <section
-    id="playerContainer"
-    class="hidden bg-black border-b border-zinc-800 py-6 px-4"
-  >
-    <div class="max-w-6xl mx-auto space-y-4">
+    <div
+        id="statusMessage"
+        class="hidden mb-6 p-4 rounded-lg bg-zinc-900 border border-zinc-800">
+    </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 bg-zinc-900/80 p-3 rounded-xl border border-zinc-800">
+    <div
+        id="resultsTitle"
+        class="text-2xl font-bold mb-6">
+        Trending
+    </div>
 
-        <div class="flex items-center gap-3">
-          <span
-            id="playerTitle"
-            class="font-bold text-base md:text-lg text-white"
-          >
-            Select a title
-          </span>
+    <div
+        id="movieGrid"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-5">
+    </div>
 
-          <span class="text-xs bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-mono">
-            HD
-          </span>
+    <div class="flex justify-center mt-8">
+        <button
+            id="loadMoreBtn"
+            class="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg">
+            Load More
+        </button>
+    </div>
+
+</main>
+
+
+<!-- PLAYER MODAL -->
+<div
+    id="playerModal"
+    class="hidden fixed inset-0 z-[100] bg-black/90 p-4 overflow-y-auto">
+
+    <div class="max-w-6xl mx-auto">
+
+        <div class="flex justify-between items-center mb-4">
+
+            <h2
+                id="playerTitle"
+                class="text-xl md:text-2xl font-bold">
+            </h2>
+
+            <button
+                id="closePlayer"
+                class="text-2xl px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700">
+                ×
+            </button>
+
         </div>
 
-        <button
-          id="closePlayerButton"
-          type="button"
-          class="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 p-1.5 rounded-lg text-xs"
-        >
-          ✕ Close
-        </button>
 
-      </div>
+        <!-- PROVIDERS -->
+        <div
+            id="providerContainer"
+            class="flex gap-2 mb-4 overflow-x-auto">
+        </div>
 
 
-      <!-- Player -->
-      <div class="relative w-full aspect-video bg-zinc-950 rounded-xl overflow-hidden shadow-2xl border border-zinc-800">
+        <!-- TV CONTROLS -->
+        <div
+            id="episodeControls"
+            class="hidden mb-4 p-4 rounded-lg bg-zinc-900 border border-zinc-800">
+
+            <div class="flex flex-col sm:flex-row gap-3">
+
+                <select
+                    id="seasonSelect"
+                    class="px-4 py-2 bg-zinc-800 rounded-lg">
+                </select>
+
+                <select
+                    id="episodeSelect"
+                    class="px-4 py-2 bg-zinc-800 rounded-lg">
+                </select>
+
+            </div>
+
+            <div
+                id="episodeGrid"
+                class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 mt-4">
+            </div>
+
+        </div>
+
+
+        <!-- PLAYER -->
+        <div class="aspect-video bg-black rounded-xl overflow-hidden">
+
+            <iframe
+                id="playerFrame"
+                class="w-full h-full"
+                src=""
+                frameborder="0"
+                allowfullscreen
+                referrerpolicy="origin">
+            </iframe>
+
+        </div>
+
 
         <div
-          id="playerMessage"
-          class="absolute inset-0 flex items-center justify-center text-center p-6 text-zinc-400"
-        >
-          Select an authorized playback source.
+            id="playerError"
+            class="hidden mt-4 p-4 rounded-lg bg-red-950 border border-red-800 text-red-200">
         </div>
 
-        <!--
-          IMPORTANT:
-          Set this iframe from your own authorized playback provider.
-
-          Example:
-          iframe.src = YOUR_AUTHORIZED_PROVIDER_URL;
-        -->
-
-        <iframe
-          id="videoIframe"
-          src=""
-          title="Media player"
-          class="absolute inset-0 w-full h-full hidden"
-          allowfullscreen
-          allow="autoplay; encrypted-media; fullscreen"
-          referrerpolicy="strict-origin-when-cross-origin"
-        ></iframe>
-
-      </div>
+    </div>
+</div>
 
 
-      <!-- Episodes -->
-      <div
-        id="episodeControls"
-        class="hidden bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3"
-      >
+<!-- CUSTOM ID MODAL -->
+<div
+    id="idModal"
+    class="hidden fixed inset-0 z-[110] bg-black/80 p-4">
 
-        <div class="flex items-center justify-between gap-3">
+    <div class="max-w-md mx-auto mt-32 bg-zinc-900 border border-zinc-800 rounded-xl p-6">
 
-          <h3 class="text-sm font-bold text-zinc-300">
-            Select Season & Episode
-          </h3>
+        <h2 class="text-xl font-bold mb-4">
+            Open Custom ID
+        </h2>
 
-          <div class="flex items-center gap-2">
+        <input
+            id="customIdInput"
+            type="text"
+            placeholder="IMDb ID or TMDB ID"
+            class="w-full px-4 py-3 bg-zinc-800 rounded-lg border border-zinc-700 outline-none"
+        >
 
-            <label
-              for="seasonSelect"
-              class="text-xs text-zinc-400"
-            >
-              Season:
-            </label>
+        <div class="flex justify-end gap-2 mt-4">
 
-            <select
-              id="seasonSelect"
-              class="bg-zinc-950 border border-zinc-700 text-xs rounded px-2 py-1 text-white"
-            ></select>
+            <button
+                id="cancelId"
+                class="px-4 py-2 bg-zinc-800 rounded-lg">
+                Cancel
+            </button>
 
-          </div>
+            <button
+                id="openId"
+                class="px-4 py-2 bg-red-600 rounded-lg">
+                Open
+            </button>
 
         </div>
 
         <div
-          id="episodeGrid"
-          class="flex flex-wrap gap-2 max-h-48 overflow-y-auto pt-1"
-        ></div>
-
-      </div>
-
-    </div>
-  </section>
-
-
-  <!-- =========================
-       MAIN CONTENT
-  ========================== -->
-
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
-
-    <div class="flex items-center justify-between gap-4">
-
-      <h2
-        id="sectionHeading"
-        class="text-xl font-bold tracking-tight text-white flex items-center gap-2"
-      >
-        <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span>
-        Trending Titles
-      </h2>
-
-      <span
-        id="resultsCount"
-        class="text-xs text-zinc-500"
-      >
-        Loading...
-      </span>
-
-    </div>
-
-
-    <!-- Error -->
-    <div
-      id="errorMessage"
-      class="hidden bg-red-950/40 border border-red-900/60 text-red-300 rounded-xl p-4 text-sm"
-    ></div>
-
-
-    <!-- Grid -->
-    <div
-      id="mediaGrid"
-      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4"
-    ></div>
-
-
-    <!-- Load More -->
-    <div class="flex justify-center pt-8 pb-12">
-
-      <button
-        id="loadMoreBtn"
-        type="button"
-        class="bg-zinc-900 hover:bg-red-600 text-zinc-200 hover:text-white border border-zinc-800 hover:border-red-600 font-bold px-8 py-3 rounded-xl transition duration-200 flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-      >
-        <span id="loadMoreText">
-          Load More Titles
-        </span>
-      </button>
-
-    </div>
-
-  </main>
-
-
-  <!-- =========================
-       MANUAL ID MODAL
-  ========================== -->
-
-  <div
-    id="manualModal"
-    class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-  >
-
-    <div
-      class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-4"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="manualModalTitle"
-    >
-
-      <div class="flex justify-between items-center">
-
-        <h3
-          id="manualModalTitle"
-          class="font-bold text-lg"
-        >
-          Direct ID Player
-        </h3>
-
-        <button
-          id="closeModalButton"
-          type="button"
-          class="text-zinc-400 hover:text-white"
-          aria-label="Close"
-        >
-          ✕
-        </button>
-
-      </div>
-
-      <p class="text-xs text-zinc-400">
-        Enter a TMDB ID or IMDb ID. IMDb IDs will be resolved through TMDB.
-      </p>
-
-      <div class="space-y-3">
-
-        <select
-          id="manualType"
-          class="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm"
-        >
-          <option value="movie">Movie</option>
-          <option value="tv">TV Series / Anime</option>
-        </select>
-
-        <input
-          id="manualId"
-          type="text"
-          autocomplete="off"
-          placeholder="TMDB ID or IMDb ID (tt...)"
-          class="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm"
-        >
-
-        <div class="grid grid-cols-2 gap-2">
-
-          <input
-            id="manualSeason"
-            type="number"
-            min="1"
-            placeholder="Season"
-            value="1"
-            class="bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm"
-          >
-
-          <input
-            id="manualEpisode"
-            type="number"
-            min="1"
-            placeholder="Episode"
-            value="1"
-            class="bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm"
-          >
-
+            id="idError"
+            class="hidden mt-4 text-red-400">
         </div>
 
-        <button
-          id="launchManualButton"
-          type="button"
-          class="w-full bg-red-600 hover:bg-red-700 font-bold py-2 rounded-lg text-sm transition"
-        >
-          Load Title
-        </button>
-
-      </div>
-
     </div>
-
-  </div>
-
-
-  <!-- =========================
-       FOOTER
-  ========================== -->
-
-  <footer class="border-t border-zinc-900 bg-zinc-950 py-6 text-center text-xs text-zinc-600 space-y-1">
-
-    <p>
-      CinemaHub Directory Prototype.
-    </p>
-
-    <p>
-      Metadata powered by TMDB.
-    </p>
-
-  </footer>
+</div>
 
 
 <script>
-"use strict";
-
-/* ============================================================
+/* =========================================================
    CONFIGURATION
-============================================================ */
+========================================================= */
 
-/*
-  IMPORTANT SECURITY NOTE:
-
-  Do NOT put a production TMDB API secret in public HTML.
-
-  Recommended architecture:
-
-      Browser
-         ↓
-      Your backend
-         ↓
-      TMDB
-
-  Change this URL to your own backend proxy.
-
-  Example:
-      const TMDB_API_BASE = "/api/tmdb";
-*/
+const TMDB_KEY = "YOUR_TMDB_API_KEY";
 
 const TMDB_API_BASE = "https://api.themoviedb.org/3";
 
-/*
-  Temporary development configuration.
-
-  Replace this with your own credential or, preferably,
-  move authentication to your backend.
-*/
-const TMDB_KEY = "YOUR_TMDB_KEY_HERE";
-
-
 const IMAGE_BASE = "https://image.tmdb.org/t/p/w500";
 
-const REQUEST_TIMEOUT = 10000;
 
-const DEFAULT_CATEGORY = "trending";
+/* =========================================================
+   STATE
+========================================================= */
+
+let currentCategory = "trending";
+let currentPage = 1;
+let currentQuery = "";
+
+let currentMedia = null;
+
+let activeSeason = 1;
+let activeEpisode = 1;
+
+let isLoading = false;
+
+let searchController = null;
+let categoryController = null;
 
 
-/* ============================================================
-   APPLICATION STATE
-============================================================ */
+/* =========================================================
+   ELEMENTS
+========================================================= */
 
-const state = {
-  category: DEFAULT_CATEGORY,
+const movieGrid = document.getElementById("movieGrid");
+const loadMoreBtn = document.getElementById("loadMoreBtn");
+const resultsTitle = document.getElementById("resultsTitle");
+const searchInput = document.getElementById("searchInput");
+const searchBtn = document.getElementById("searchBtn");
+const statusMessage = document.getElementById("statusMessage");
 
-  page: 1,
+const playerModal = document.getElementById("playerModal");
+const playerFrame = document.getElementById("playerFrame");
+const playerTitle = document.getElementById("playerTitle");
+const closePlayer = document.getElementById("closePlayer");
 
-  query: "",
+const providerContainer = document.getElementById("providerContainer");
+const episodeControls = document.getElementById("episodeControls");
 
-  isLoading: false,
+const seasonSelect = document.getElementById("seasonSelect");
+const episodeSelect = document.getElementById("episodeSelect");
+const episodeGrid = document.getElementById("episodeGrid");
 
-  hasMore: true,
+const playerError = document.getElementById("playerError");
 
-  activeMedia: null,
+const customIdInput = document.getElementById("customIdInput");
+const idModal = document.getElementById("idModal");
+const idError = document.getElementById("idError");
 
-  activeSeason: 1,
+const cancelId = document.getElementById("cancelId");
+const openId = document.getElementById("openId");
 
-  activeEpisode: 1,
 
-  seasons: [],
+/* =========================================================
+   VIDEO PROVIDERS
+========================================================= */
 
-  episodes: [],
+/*
+    Add your authorized playback-provider URL builders here.
 
-  searchController: null,
+    Each provider receives:
 
-  categoryController: null
+    {
+        type: "movie" | "tv",
+        id: TMDB ID,
+        season: number | null,
+        episode: number | null
+    }
+
+    The rest of the CinemaHub player automatically handles
+    provider switching.
+*/
+
+const VIDEO_PROVIDERS = {
+
+    provider1: {
+        name: "Server 1",
+
+        buildUrl({ type, id, season, episode }) {
+
+            /*
+                Return your authorized provider URL here.
+
+                Example structure:
+
+                return yourProviderFunction(
+                    type,
+                    id,
+                    season,
+                    episode
+                );
+            */
+
+            return "";
+        }
+    },
+
+
+    provider2: {
+        name: "Server 2",
+
+        buildUrl({ type, id, season, episode }) {
+
+            /*
+                Return your authorized provider URL here.
+            */
+
+            return "";
+        }
+    },
+
+
+    provider3: {
+        name: "Server 3",
+
+        buildUrl({ type, id, season, episode }) {
+
+            /*
+                Return your authorized provider URL here.
+            */
+
+            return "";
+        }
+    }
+
 };
 
 
-/* ============================================================
-   DOM
-============================================================ */
-
-const dom = {};
+let activeProvider = "provider1";
 
 
-/* ============================================================
-   INITIALIZATION
-============================================================ */
+/* =========================================================
+   API REQUEST
+========================================================= */
 
-document.addEventListener("DOMContentLoaded", init);
+async function apiRequest(endpoint, params = {}, signal = null) {
 
+    const url = new URL(`${TMDB_API_BASE}${endpoint}`);
 
-function init() {
+    url.searchParams.set("api_key", TMDB_KEY);
 
-  cacheDom();
+    Object.entries(params).forEach(([key, value]) => {
 
-  bindEvents();
-
-  loadCategory(DEFAULT_CATEGORY, 1, false);
-}
-
-
-/* ============================================================
-   DOM CACHE
-============================================================ */
-
-function cacheDom() {
-
-  dom.searchInput = document.getElementById("searchInput");
-
-  dom.mediaGrid = document.getElementById("mediaGrid");
-
-  dom.sectionHeading = document.getElementById("sectionHeading");
-
-  dom.resultsCount = document.getElementById("resultsCount");
-
-  dom.errorMessage = document.getElementById("errorMessage");
-
-  dom.loadMoreBtn = document.getElementById("loadMoreBtn");
-
-  dom.loadMoreText = document.getElementById("loadMoreText");
-
-  dom.playerContainer = document.getElementById("playerContainer");
-
-  dom.playerTitle = document.getElementById("playerTitle");
-
-  dom.playerMessage = document.getElementById("playerMessage");
-
-  dom.videoIframe = document.getElementById("videoIframe");
-
-  dom.episodeControls = document.getElementById("episodeControls");
-
-  dom.seasonSelect = document.getElementById("seasonSelect");
-
-  dom.episodeGrid = document.getElementById("episodeGrid");
-
-  dom.manualModal = document.getElementById("manualModal");
-
-  dom.manualType = document.getElementById("manualType");
-
-  dom.manualId = document.getElementById("manualId");
-
-  dom.manualSeason = document.getElementById("manualSeason");
-
-  dom.manualEpisode = document.getElementById("manualEpisode");
-
-  dom.homeButton = document.getElementById("homeButton");
-
-  dom.customIdButton = document.getElementById("customIdButton");
-
-  dom.closeModalButton = document.getElementById("closeModalButton");
-
-  dom.launchManualButton = document.getElementById("launchManualButton");
-
-  dom.closePlayerButton = document.getElementById("closePlayerButton");
-}
-
-
-/* ============================================================
-   EVENTS
-============================================================ */
-
-function bindEvents() {
-
-  /*
-    Navigation
-  */
-
-  document.querySelectorAll(".nav-tab").forEach(button => {
-
-    button.addEventListener("click", () => {
-
-      const category = button.dataset.cat;
-
-      selectCategoryTab(category, button);
+        if (
+            value !== undefined &&
+            value !== null &&
+            value !== ""
+        ) {
+            url.searchParams.set(key, value);
+        }
 
     });
 
-  });
 
+    const controller = new AbortController();
 
-  /*
-    Home
-  */
+    const timeout = setTimeout(() => {
+        controller.abort();
+    }, 15000);
 
-  dom.homeButton.addEventListener("click", () => {
 
-    selectCategoryTab(
-      DEFAULT_CATEGORY,
-      document.querySelector('[data-cat="trending"]')
-    );
-
-  });
-
-
-  /*
-    Load More
-  */
-
-  dom.loadMoreBtn.addEventListener("click", executeLoadMore);
-
-
-  /*
-    Search
-  */
-
-  let debounceTimer = null;
-
-  dom.searchInput.addEventListener("input", event => {
-
-    clearTimeout(debounceTimer);
-
-    const query = event.target.value.trim();
-
-    if (query.length === 0) {
-
-      state.query = "";
-
-      state.page = 1;
-
-      debounceTimer = setTimeout(() => {
-
-        selectCategoryTab(
-          DEFAULT_CATEGORY,
-          document.querySelector('[data-cat="trending"]')
-        );
-
-      }, 150);
-
-      return;
-    }
-
-
-    if (query.length < 3) {
-
-      return;
-    }
-
-
-    debounceTimer = setTimeout(() => {
-
-      performSearch(query);
-
-    }, 400);
-
-  });
-
-
-  /*
-    Season change
-  */
-
-  dom.seasonSelect.addEventListener("change", async () => {
-
-    const seasonNumber = Number(dom.seasonSelect.value);
-
-    if (!Number.isInteger(seasonNumber)) {
-      return;
-    }
-
-    state.activeSeason = seasonNumber;
-
-    /*
-      Always start a new season at episode 1.
-    */
-
-    state.activeEpisode = 1;
-
-    await loadSeasonEpisodes();
-
-  });
-
-
-  /*
-    Manual ID
-  */
-
-  dom.customIdButton.addEventListener(
-    "click",
-    openManualModal
-  );
-
-
-  dom.closeModalButton.addEventListener(
-    "click",
-    closeManualModal
-  );
-
-
-  dom.launchManualButton.addEventListener(
-    "click",
-    playManualId
-  );
-
-
-  /*
-    Player
-  */
-
-  dom.closePlayerButton.addEventListener(
-    "click",
-    closePlayer
-  );
-
-
-  /*
-    Escape key
-  */
-
-  document.addEventListener("keydown", event => {
-
-    if (event.key !== "Escape") {
-      return;
-    }
-
-    if (!dom.manualModal.classList.contains("hidden")) {
-      closeManualModal();
-    }
-
-  });
-
-}
-
-
-/* ============================================================
-   API HELPERS
-============================================================ */
-
-function buildTMDBUrl(path, params = {}) {
-
-  const url = new URL(
-    `${TMDB_API_BASE}${path}`
-  );
-
-  /*
-    Only use api_key when running directly against TMDB.
-
-    If you switch to your backend, remove this.
-  */
-
-  if (
-    TMDB_API_BASE.includes("api.themoviedb.org") &&
-    TMDB_KEY !== "YOUR_TMDB_KEY_HERE"
-  ) {
-    url.searchParams.set("api_key", TMDB_KEY);
-  }
-
-
-  Object.entries(params).forEach(([key, value]) => {
-
-    if (
-      value !== undefined &&
-      value !== null &&
-      value !== ""
-    ) {
-      url.searchParams.set(key, value);
-    }
-
-  });
-
-
-  return url.toString();
-}
-
-
-async function apiRequest(path, params = {}, controller = null) {
-
-  const url = buildTMDBUrl(path, params);
-
-  const timeoutController = new AbortController();
-
-  const timeout = setTimeout(
-    () => timeoutController.abort(),
-    REQUEST_TIMEOUT
-  );
-
-
-  /*
-    Combine external abort + timeout.
-  */
-
-  let signal = timeoutController.signal;
-
-  if (controller) {
-
-    const combined = new AbortController();
-
-    const abortBoth = () => combined.abort();
-
-    controller.signal.addEventListener(
-      "abort",
-      abortBoth,
-      { once: true }
-    );
-
-    timeoutController.signal.addEventListener(
-      "abort",
-      abortBoth,
-      { once: true }
-    );
-
-    signal = combined.signal;
-  }
-
-
-  try {
-
-    const response = await fetch(
-      url,
-      {
-        method: "GET",
-        headers: {
-          "Accept": "application/json"
-        },
-        signal
-      }
-    );
-
-
-    if (!response.ok) {
-
-      throw new Error(
-        `TMDB request failed: HTTP ${response.status}`
-      );
-
-    }
-
-
-    const data = await response.json();
-
-    return data;
-
-  } finally {
-
-    clearTimeout(timeout);
-
-  }
-
-}
-
-
-/* ============================================================
-   CATEGORY LOADING
-============================================================ */
-
-async function loadCategory(
-  category,
-  page = 1,
-  append = false
-) {
-
-  const validCategories = [
-    "trending",
-    "movie",
-    "tv",
-    "anime"
-  ];
-
-
-  if (!validCategories.includes(category)) {
-
-    showError("Invalid category.");
-
-    return false;
-
-  }
-
-
-  if (state.categoryController) {
-    state.categoryController.abort();
-  }
-
-
-  const controller = new AbortController();
-
-  state.categoryController = controller;
-
-
-  state.isLoading = true;
-
-  updateLoadButton();
-
-
-  if (!append) {
-    hideError();
-  }
-
-
-  try {
-
-    let path;
-
-    let params = {
-      page
+    const abortFromOutside = () => {
+        controller.abort();
     };
 
 
-    if (category === "trending") {
+    if (signal) {
 
-      path = "/trending/all/day";
-
-    }
-
-
-    else if (category === "movie") {
-
-      path = "/movie/popular";
-
-    }
-
-
-    else if (category === "tv") {
-
-      path = "/tv/popular";
+        if (signal.aborted) {
+            controller.abort();
+        } else {
+            signal.addEventListener(
+                "abort",
+                abortFromOutside,
+                { once: true }
+            );
+        }
 
     }
 
 
-    else if (category === "anime") {
+    try {
 
-      path = "/discover/tv";
+        const response = await fetch(
+            url,
+            {
+                signal: controller.signal
+            }
+        );
 
-      params.with_genres = 16;
 
-      params.with_original_language = "ja";
+        if (!response.ok) {
 
-      params.sort_by = "popularity.desc";
+            throw new Error(
+                `TMDB request failed: ${response.status}`
+            );
+
+        }
+
+
+        return await response.json();
+
+    } finally {
+
+        clearTimeout(timeout);
+
+        if (signal) {
+            signal.removeEventListener(
+                "abort",
+                abortFromOutside
+            );
+        }
 
     }
 
+}
 
-    const data = await apiRequest(
-      path,
-      params,
-      controller
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+function showStatus(message, type = "info") {
+
+    statusMessage.textContent = message;
+
+    statusMessage.classList.remove(
+        "hidden",
+        "border-red-800",
+        "bg-red-950",
+        "text-red-200"
     );
 
 
-    const results = Array.isArray(data.results)
-      ? data.results
-      : [];
+    if (type === "error") {
+
+        statusMessage.classList.add(
+            "bg-red-950",
+            "border-red-800",
+            "text-red-200"
+        );
+
+    } else {
+
+        statusMessage.classList.add(
+            "bg-zinc-900"
+        );
+
+    }
+
+}
 
 
-    const items = results
-      .map(item => normalizeItem(item, category))
-      .filter(Boolean);
+function hideStatus() {
+    statusMessage.classList.add("hidden");
+}
 
+
+/* =========================================================
+   NORMALIZE TMDB ITEM
+========================================================= */
+
+function normalizeItem(item, forcedType = null) {
+
+    const type =
+        forcedType ||
+        item.media_type ||
+        (
+            item.first_air_date ||
+            item.name ||
+            item.original_name
+                ? "tv"
+                : "movie"
+        );
+
+
+    return {
+
+        id: item.id,
+
+        type,
+
+        title:
+            item.title ||
+            item.name ||
+            item.original_title ||
+            item.original_name ||
+            "Unknown Title",
+
+        overview:
+            item.overview ||
+            "No description available.",
+
+        poster:
+            item.poster_path
+                ? `${IMAGE_BASE}${item.poster_path}`
+                : null,
+
+        backdrop:
+            item.backdrop_path
+                ? `https://image.tmdb.org/t/p/original${item.backdrop_path}`
+                : null,
+
+        releaseDate:
+            item.release_date ||
+            item.first_air_date ||
+            "",
+
+        rating:
+            typeof item.vote_average === "number"
+                ? item.vote_average
+                : 0
+
+    };
+
+}
+
+
+/* =========================================================
+   CARD HTML
+========================================================= */
+
+function createCard(item) {
+
+    const card = document.createElement("div");
+
+    card.className =
+        "card bg-zinc-900 rounded-xl overflow-hidden cursor-pointer border border-zinc-800 hover:border-red-500";
+
+
+    const image = document.createElement("img");
+
+    image.className =
+        "w-full aspect-[2/3] object-cover bg-zinc-800";
+
+    image.alt = item.title;
+
+    image.loading = "lazy";
+
+    image.src =
+        item.poster ||
+        "https://placehold.co/500x750/18181b/ffffff?text=No+Poster";
+
+
+    const content = document.createElement("div");
+
+    content.className = "p-3";
+
+
+    const title = document.createElement("h3");
+
+    title.className =
+        "font-semibold truncate";
+
+    title.textContent = item.title;
+
+
+    const info = document.createElement("div");
+
+    info.className =
+        "flex justify-between text-sm text-zinc-400 mt-2";
+
+
+    const type = document.createElement("span");
+
+    type.textContent =
+        item.type === "tv"
+            ? "TV"
+            : "Movie";
+
+
+    const rating = document.createElement("span");
+
+    rating.textContent =
+        `★ ${item.rating.toFixed(1)}`;
+
+
+    info.appendChild(type);
+    info.appendChild(rating);
+
+
+    content.appendChild(title);
+    content.appendChild(info);
+
+    card.appendChild(image);
+    card.appendChild(content);
+
+
+    card.addEventListener(
+        "click",
+        () => selectMedia(item)
+    );
+
+
+    return card;
+
+}
+
+
+/* =========================================================
+   RENDER CARDS
+========================================================= */
+
+function renderCards(items, append = false) {
 
     if (!append) {
-
-      renderCards(items, false);
-
-    } else {
-
-      renderCards(items, true);
-
+        movieGrid.replaceChildren();
     }
 
 
-    state.hasMore =
-      Boolean(data.page < data.total_pages);
+    if (!items.length && !append) {
 
+        const empty = document.createElement("div");
 
-    state.page = page;
+        empty.className =
+            "col-span-full text-center py-16 text-zinc-400";
 
+        empty.textContent =
+            "No results found.";
 
-    updateResultsCount(
-      data.total_results ?? items.length
-    );
+        movieGrid.appendChild(empty);
 
-
-    return items.length > 0;
-
-
-  } catch (error) {
-
-    if (error.name === "AbortError") {
-      return false;
+        return;
     }
 
 
-    console.error(
-      "Category loading error:",
-      error
-    );
+    const fragment = document.createDocumentFragment();
 
 
-    showError(
-      "Unable to load titles right now. Check your connection or TMDB configuration."
-    );
+    items.forEach(item => {
 
-
-    return false;
-
-  } finally {
-
-    state.isLoading = false;
-
-    updateLoadButton();
-
-  }
-
-}
-
-
-/* ============================================================
-   SEARCH
-============================================================ */
-
-async function performSearch(query) {
-
-  /*
-    Cancel the previous search.
-  */
-
-  if (state.searchController) {
-    state.searchController.abort();
-  }
-
-
-  const controller = new AbortController();
-
-  state.searchController = controller;
-
-
-  state.query = query;
-
-  state.page = 1;
-
-  state.hasMore = true;
-
-
-  setHeading(
-    `Results for "${query}"`
-  );
-
-
-  state.isLoading = true;
-
-  updateLoadButton();
-
-  hideError();
-
-
-  try {
-
-    const data = await apiRequest(
-      "/search/multi",
-      {
-        query,
-        page: 1,
-        include_adult: false
-      },
-      controller
-    );
-
-
-    const filtered = (data.results || [])
-      .filter(item =>
-        item.media_type === "movie" ||
-        item.media_type === "tv"
-      )
-      .map(item =>
-        normalizeItem(
-          item,
-          item.media_type
-        )
-      )
-      .filter(Boolean);
-
-
-    renderCards(
-      filtered,
-      false
-    );
-
-
-    state.hasMore =
-      Boolean(data.page < data.total_pages);
-
-
-    updateResultsCount(
-      filtered.length
-    );
-
-
-    if (filtered.length === 0) {
-
-      showEmptyState(
-        "No movies or TV shows found."
-      );
-
-    }
-
-
-    return filtered.length > 0;
-
-  } catch (error) {
-
-    if (error.name === "AbortError") {
-      return false;
-    }
-
-
-    console.error(
-      "Search error:",
-      error
-    );
-
-
-    showError(
-      "Search failed. Please try again."
-    );
-
-
-    return false;
-
-  } finally {
-
-    state.isLoading = false;
-
-    updateLoadButton();
-
-  }
-
-}
-
-
-/* ============================================================
-   LOAD MORE
-============================================================ */
-
-async function executeLoadMore() {
-
-  if (state.isLoading) {
-    return;
-  }
-
-
-  if (!state.hasMore) {
-    return;
-  }
-
-
-  const nextPage =
-    state.page + 1;
-
-
-  state.isLoading = true;
-
-  updateLoadButton();
-
-
-  let success = false;
-
-
-  try {
-
-    if (state.query) {
-
-      success = await searchNextPage(
-        state.query,
-        nextPage
-      );
-
-    } else {
-
-      success = await loadCategory(
-        state.category,
-        nextPage,
-        true
-      );
-
-    }
-
-
-    /*
-      Only update current page if the request actually worked.
-      This prevents skipped pages.
-    */
-
-    if (success) {
-
-      state.page = nextPage;
-
-    }
-
-
-  } finally {
-
-    state.isLoading = false;
-
-    updateLoadButton();
-
-  }
-
-}
-
-
-async function searchNextPage(
-  query,
-  page
-) {
-
-  try {
-
-    const data = await apiRequest(
-      "/search/multi",
-      {
-        query,
-        page,
-        include_adult: false
-      }
-    );
-
-
-    const items = (data.results || [])
-      .filter(item =>
-        item.media_type === "movie" ||
-        item.media_type === "tv"
-      )
-      .map(item =>
-        normalizeItem(
-          item,
-          item.media_type
-        )
-      )
-      .filter(Boolean);
-
-
-    if (items.length === 0) {
-
-      state.hasMore = false;
-
-      return false;
-
-    }
-
-
-    renderCards(
-      items,
-      true
-    );
-
-
-    state.hasMore =
-      Boolean(data.page < data.total_pages);
-
-
-    return true;
-
-  } catch (error) {
-
-    console.error(
-      "Load more search error:",
-      error
-    );
-
-    showError(
-      "Unable to load more results."
-    );
-
-    return false;
-
-  }
-
-}
-
-
-/* ============================================================
-   CATEGORY TABS
-============================================================ */
-
-function selectCategoryTab(
-  category,
-  button
-) {
-
-  if (state.isLoading) {
-    return;
-  }
-
-
-  state.category = category;
-
-  state.page = 1;
-
-  state.query = "";
-
-  state.hasMore = true;
-
-
-  dom.searchInput.value = "";
-
-
-  setHeading(
-    getCategoryTitle(category)
-  );
-
-
-  document
-    .querySelectorAll(".nav-tab")
-    .forEach(tab => {
-
-      tab.className =
-        "nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition";
+        fragment.appendChild(
+            createCard(item)
+        );
 
     });
 
 
-  if (button) {
+    movieGrid.appendChild(fragment);
 
-    button.className =
-      "nav-tab px-3 py-1.5 rounded-lg text-white bg-zinc-800";
-
-  }
+}
 
 
-  loadCategory(
+/* =========================================================
+   GET CATEGORY
+========================================================= */
+
+function getCategoryEndpoint(category) {
+
+    switch (category) {
+
+        case "movie":
+            return "/movie/popular";
+
+        case "tv":
+            return "/tv/popular";
+
+        case "anime":
+            return "/discover/tv";
+
+        case "trending":
+        default:
+            return "/trending/all/day";
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD CATEGORY
+========================================================= */
+
+async function loadCategory(
     category,
-    1,
-    false
-  );
-
-}
-
-
-function getCategoryTitle(category) {
-
-  const titles = {
-
-    trending: "Trending Titles",
-
-    movie: "Popular Movies",
-
-    tv: "Popular TV Shows",
-
-    anime: "Top Anime Series"
-
-  };
-
-
-  return titles[category] || "Titles";
-
-}
-
-
-/* ============================================================
-   NORMALIZATION
-============================================================ */
-
-function normalizeItem(
-  item,
-  defaultType
+    page = 1,
+    append = false
 ) {
 
-  if (!item || !item.id) {
-    return null;
-  }
+    if (categoryController) {
+        categoryController.abort();
+    }
 
 
-  const type =
-    item.media_type ||
-    (
-      defaultType === "movie"
-        ? "movie"
-        : "tv"
-    );
+    categoryController =
+        new AbortController();
 
 
-  return {
+    isLoading = true;
 
-    id: Number(item.id),
+    loadMoreBtn.disabled = true;
 
-    title:
-      item.title ||
-      item.name ||
-      "Untitled",
-
-    type:
-      type === "movie"
-        ? "movie"
-        : "tv",
-
-    rating:
-      Number.isFinite(item.vote_average)
-        ? Number(item.vote_average).toFixed(1)
-        : "N/A",
-
-    year:
-      (
-        item.release_date ||
-        item.first_air_date ||
-        ""
-      ).substring(0, 4) || "Unknown",
-
-    poster_path:
-      item.poster_path || null
-
-  };
-
-}
+    loadMoreBtn.textContent =
+        "Loading...";
 
 
-/* ============================================================
-   CARD RENDERING
-============================================================ */
+    try {
 
-function renderCards(
-  items,
-  append = false
-) {
-
-  if (!append) {
-
-    dom.mediaGrid.replaceChildren();
-
-  }
+        const endpoint =
+            getCategoryEndpoint(category);
 
 
-  if (!Array.isArray(items) || items.length === 0) {
+        const params = {
+            page
+        };
 
-    if (!append) {
 
-      showEmptyState(
-        "No titles found."
-      );
+        if (category === "anime") {
+
+            params.with_genres = 16;
+            params.with_original_language = "ja";
+
+        }
+
+
+        const data =
+            await apiRequest(
+                endpoint,
+                params,
+                categoryController.signal
+            );
+
+
+        const items =
+            (data.results || [])
+                .map(item =>
+                    normalizeItem(
+                        item,
+                        category === "movie"
+                            ? "movie"
+                            : category === "tv" ||
+                              category === "anime"
+                                ? "tv"
+                                : null
+                    )
+                );
+
+
+        renderCards(
+            items,
+            append
+        );
+
+
+        currentCategory = category;
+        currentPage = page;
+
+
+        loadMoreBtn.classList.toggle(
+            "hidden",
+            !data.total_pages ||
+            page >= data.total_pages
+        );
+
+
+        hideStatus();
+
+    } catch (error) {
+
+        if (error.name !== "AbortError") {
+
+            console.error(error);
+
+            if (!append) {
+                movieGrid.replaceChildren();
+            }
+
+            showStatus(
+                "Something went wrong while loading the catalog.",
+                "error"
+            );
+
+        }
+
+    } finally {
+
+        isLoading = false;
+
+        loadMoreBtn.disabled = false;
+
+        loadMoreBtn.textContent =
+            "Load More";
 
     }
 
-    return;
-
-  }
-
-
-  items.forEach(item => {
-
-    const card =
-      createMediaCard(item);
-
-    dom.mediaGrid.appendChild(card);
-
-  });
-
 }
 
 
-function createMediaCard(item) {
+/* =========================================================
+   SEARCH
+========================================================= */
 
-  const card =
-    document.createElement("article");
+async function searchMedia(
+    query,
+    page = 1,
+    append = false
+) {
 
-
-  card.className =
-    "group relative bg-zinc-900 rounded-xl overflow-hidden cursor-pointer border border-zinc-800/80 hover:border-red-600 transition duration-300 flex flex-col";
-
-
-  card.setAttribute(
-    "tabindex",
-    "0"
-  );
-
-
-  card.setAttribute(
-    "role",
-    "button"
-  );
+    if (searchController) {
+        searchController.abort();
+    }
 
 
-  card.setAttribute(
-    "aria-label",
-    `Open ${item.title}`
-  );
+    searchController =
+        new AbortController();
 
 
-  card.addEventListener(
-    "click",
-    () => selectMedia(item)
-  );
+    isLoading = true;
+
+    loadMoreBtn.disabled = true;
+
+    loadMoreBtn.textContent =
+        "Searching...";
 
 
-  card.addEventListener(
-    "keydown",
-    event => {
+    try {
 
-      if (
-        event.key === "Enter" ||
-        event.key === " "
-      ) {
+        const data =
+            await apiRequest(
+                "/search/multi",
+                {
+                    query,
+                    page,
+                    include_adult: false
+                },
+                searchController.signal
+            );
 
-        event.preventDefault();
 
-        selectMedia(item);
+        const items =
+            (data.results || [])
+                .filter(
+                    item =>
+                        item.media_type === "movie" ||
+                        item.media_type === "tv"
+                )
+                .map(item =>
+                    normalizeItem(item)
+                );
 
-      }
+
+        renderCards(
+            items,
+            append
+        );
+
+
+        currentQuery = query;
+        currentPage = page;
+
+
+        resultsTitle.textContent =
+            `Search results for "${query}"`;
+
+
+        loadMoreBtn.classList.toggle(
+            "hidden",
+            !data.total_pages ||
+            page >= data.total_pages
+        );
+
+
+        hideStatus();
+
+    } catch (error) {
+
+        if (error.name !== "AbortError") {
+
+            console.error(error);
+
+            showStatus(
+                "Search failed. Try again.",
+                "error"
+            );
+
+        }
+
+    } finally {
+
+        isLoading = false;
+
+        loadMoreBtn.disabled = false;
+
+        loadMoreBtn.textContent =
+            "Load More";
 
     }
-  );
-
-
-  const posterWrapper =
-    document.createElement("div");
-
-
-  posterWrapper.className =
-    "relative aspect-[2/3] overflow-hidden bg-zinc-950";
-
-
-  const image =
-    document.createElement("img");
-
-
-  image.className =
-    "w-full h-full object-cover group-hover:scale-105 transition duration-500";
-
-
-  image.loading = "lazy";
-
-  image.alt = item.title;
-
-
-  image.src =
-    item.poster_path
-      ? `${IMAGE_BASE}${item.poster_path}`
-      : createPlaceholder(item.title);
-
-
-  image.onerror = () => {
-
-    image.onerror = null;
-
-    image.src =
-      createPlaceholder(item.title);
-
-  };
-
-
-  posterWrapper.appendChild(image);
-
-
-  const gradient =
-    document.createElement("div");
-
-
-  gradient.className =
-    "absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60";
-
-
-  posterWrapper.appendChild(gradient);
-
-
-  const typeBadge =
-    document.createElement("span");
-
-
-  typeBadge.className =
-    "absolute top-2 left-2 bg-red-600 text-[10px] font-black uppercase tracking-wider text-white px-1.5 py-0.5 rounded";
-
-
-  typeBadge.textContent =
-    item.type === "tv"
-      ? "TV"
-      : "MOVIE";
-
-
-  posterWrapper.appendChild(typeBadge);
-
-
-  const ratingBadge =
-    document.createElement("span");
-
-
-  ratingBadge.className =
-    "absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-yellow-400 text-[11px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border border-yellow-500/20";
-
-
-  ratingBadge.textContent =
-    `★ ${item.rating}`;
-
-
-  posterWrapper.appendChild(ratingBadge);
-
-
-  const playOverlay =
-    document.createElement("div");
-
-
-  playOverlay.className =
-    "absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300";
-
-
-  const playButton =
-    document.createElement("div");
-
-
-  playButton.className =
-    "w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center text-xl shadow-lg";
-
-
-  playButton.textContent =
-    "▶";
-
-
-  playOverlay.appendChild(playButton);
-
-  posterWrapper.appendChild(playOverlay);
-
-
-  const info =
-    document.createElement("div");
-
-
-  info.className =
-    "p-3 flex flex-col flex-1 justify-between";
-
-
-  const title =
-    document.createElement("h3");
-
-
-  title.className =
-    "text-xs md:text-sm font-bold text-zinc-100 line-clamp-1 group-hover:text-red-500 transition";
-
-
-  title.textContent =
-    item.title;
-
-
-  const year =
-    document.createElement("p");
-
-
-  year.className =
-    "text-[11px] text-zinc-500 mt-1";
-
-
-  year.textContent =
-    item.year;
-
-
-  info.appendChild(title);
-
-  info.appendChild(year);
-
-
-  card.appendChild(posterWrapper);
-
-  card.appendChild(info);
-
-
-  return card;
 
 }
 
 
-/* ============================================================
-   PLACEHOLDER IMAGE
-============================================================ */
+/* =========================================================
+   LOAD MORE
+========================================================= */
 
-function createPlaceholder(title) {
+async function loadMore() {
 
-  const safeText =
-    encodeURIComponent(
-      title.substring(0, 24)
-    );
+    if (isLoading) return;
 
 
-  return `https://placehold.co/500x750/09090b/ffffff?text=${safeText}`;
+    const nextPage =
+        currentPage + 1;
+
+
+    if (currentQuery) {
+
+        await searchMedia(
+            currentQuery,
+            nextPage,
+            true
+        );
+
+    } else {
+
+        await loadCategory(
+            currentCategory,
+            nextPage,
+            true
+        );
+
+    }
 
 }
 
 
-/* ============================================================
-   MEDIA SELECTION
-============================================================ */
+/* =========================================================
+   SELECT MEDIA
+========================================================= */
 
 async function selectMedia(item) {
 
-  state.activeMedia = item;
+    currentMedia = item;
 
-  state.activeSeason = 1;
-
-  state.activeEpisode = 1;
-
-  state.seasons = [];
-
-  state.episodes = [];
+    activeSeason = 1;
+    activeEpisode = 1;
 
 
-  dom.playerContainer.classList.remove(
-    "hidden"
-  );
+    playerTitle.textContent =
+        item.title;
 
 
-  dom.playerTitle.textContent =
-    item.title;
-
-
-  dom.playerContainer.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-
-
-  if (item.type === "tv") {
-
-    dom.episodeControls.classList.remove(
-      "hidden"
+    playerModal.classList.remove(
+        "hidden"
     );
 
 
-    await loadShowSeasons(
-      item.id
+    playerError.classList.add(
+        "hidden"
     );
 
-  } else {
 
-    dom.episodeControls.classList.add(
-      "hidden"
-    );
-
-  }
+    buildProviderButtons();
 
 
-  prepareAuthorizedPlayer(
-    item
-  );
+    if (item.type === "tv") {
+
+        episodeControls.classList.remove(
+            "hidden"
+        );
+
+        await loadTVDetails(item.id);
+
+    } else {
+
+        episodeControls.classList.add(
+            "hidden"
+        );
+
+        updatePlayerSource();
+
+    }
 
 }
 
 
-/* ============================================================
-   TV SEASONS
-============================================================ */
+/* =========================================================
+   LOAD TV DETAILS
+========================================================= */
 
-async function loadShowSeasons(
-  tvId
+async function loadTVDetails(tvId) {
+
+    try {
+
+        const data =
+            await apiRequest(
+                `/tv/${tvId}`
+            );
+
+
+        const seasons =
+            (data.seasons || [])
+                .filter(
+                    season =>
+                        season.season_number >= 0
+                );
+
+
+        seasonSelect.replaceChildren();
+
+
+        seasons.forEach(season => {
+
+            const option =
+                document.createElement("option");
+
+            option.value =
+                season.season_number;
+
+            option.textContent =
+                season.name ||
+                `Season ${season.season_number}`;
+
+            seasonSelect.appendChild(
+                option
+            );
+
+        });
+
+
+        if (!seasons.length) {
+
+            showPlayerError(
+                "No seasons were found for this show."
+            );
+
+            return;
+        }
+
+
+        const requestedSeason =
+            seasons.find(
+                season =>
+                    season.season_number ===
+                    Number(activeSeason)
+            );
+
+
+        activeSeason =
+            requestedSeason
+                ? requestedSeason.season_number
+                : seasons[0].season_number;
+
+
+        seasonSelect.value =
+            activeSeason;
+
+
+        await loadEpisodes(
+            currentMedia.id,
+            activeSeason
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showPlayerError(
+            "Could not load the show's seasons."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   LOAD EPISODES
+========================================================= */
+
+async function loadEpisodes(
+    tvId,
+    seasonNumber
 ) {
 
-  dom.seasonSelect.replaceChildren();
+    try {
 
-  dom.episodeGrid.replaceChildren();
-
-
-  try {
-
-    const data =
-      await apiRequest(
-        `/tv/${tvId}`
-      );
+        const data =
+            await apiRequest(
+                `/tv/${tvId}/season/${seasonNumber}`
+            );
 
 
-    const seasons =
-      Array.isArray(data.seasons)
-        ? data.seasons.filter(
-            season =>
-              season.season_number >= 1
-          )
-        : [];
+        const episodes =
+            data.episodes || [];
 
 
-    state.seasons = seasons;
+        episodeSelect.replaceChildren();
+        episodeGrid.replaceChildren();
 
 
-    if (seasons.length === 0) {
+        episodes.forEach(
+            episode => {
 
-      dom.episodeGrid.textContent =
-        "No season information available.";
+                const option =
+                    document.createElement("option");
 
-      return;
+                option.value =
+                    episode.episode_number;
+
+                option.textContent =
+                    `Episode ${episode.episode_number}`;
+
+                episodeSelect.appendChild(
+                    option
+                );
+
+
+                const button =
+                    document.createElement("button");
+
+                button.type = "button";
+
+                button.className =
+                    "episode-btn px-3 py-2 bg-zinc-800 rounded-lg hover:bg-zinc-700";
+
+
+                button.textContent =
+                    episode.episode_number;
+
+
+                button.dataset.episode =
+                    episode.episode_number;
+
+
+                button.addEventListener(
+                    "click",
+                    () => {
+
+                        activeEpisode =
+                            Number(
+                                episode.episode_number
+                            );
+
+                        episodeSelect.value =
+                            activeEpisode;
+
+                        updateEpisodeButtons();
+
+                        updatePlayerSource();
+
+                    }
+                );
+
+
+                episodeGrid.appendChild(
+                    button
+                );
+
+            }
+        );
+
+
+        if (episodes.length) {
+
+            activeEpisode =
+                episodes[0].episode_number;
+
+            episodeSelect.value =
+                activeEpisode;
+
+        }
+
+
+        updateEpisodeButtons();
+
+        updatePlayerSource();
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showPlayerError(
+            "Could not load episodes."
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   EPISODE BUTTON STATE
+========================================================= */
+
+function updateEpisodeButtons() {
+
+    document
+        .querySelectorAll(".episode-btn")
+        .forEach(button => {
+
+            button.classList.toggle(
+                "active",
+                Number(button.dataset.episode) ===
+                Number(activeEpisode)
+            );
+
+        });
+
+}
+
+
+/* =========================================================
+   BUILD PROVIDER BUTTONS
+========================================================= */
+
+function buildProviderButtons() {
+
+    providerContainer.replaceChildren();
+
+
+    Object.entries(
+        VIDEO_PROVIDERS
+    ).forEach(
+        ([providerId, provider]) => {
+
+            const button =
+                document.createElement("button");
+
+
+            button.type = "button";
+
+            button.className =
+                "provider-btn px-4 py-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 whitespace-nowrap";
+
+
+            button.dataset.provider =
+                providerId;
+
+
+            button.textContent =
+                provider.name;
+
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    selectProvider(
+                        providerId
+                    );
+
+                }
+            );
+
+
+            providerContainer.appendChild(
+                button
+            );
+
+        }
+    );
+
+
+    updateProviderButtons();
+
+}
+
+
+/* =========================================================
+   SELECT PROVIDER
+========================================================= */
+
+function selectProvider(
+    providerId
+) {
+
+    if (
+        !VIDEO_PROVIDERS[
+            providerId
+        ]
+    ) {
+        return;
+    }
+
+
+    activeProvider =
+        providerId;
+
+
+    updateProviderButtons();
+
+    updatePlayerSource();
+
+}
+
+
+/* =========================================================
+   PROVIDER BUTTON STATE
+========================================================= */
+
+function updateProviderButtons() {
+
+    document
+        .querySelectorAll(
+            "[data-provider]"
+        )
+        .forEach(button => {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.provider ===
+                activeProvider
+            );
+
+        });
+
+}
+
+
+/* =========================================================
+   UPDATE PLAYER
+========================================================= */
+
+function updatePlayerSource() {
+
+    if (!currentMedia) {
+        return;
+    }
+
+
+    const provider =
+        VIDEO_PROVIDERS[
+            activeProvider
+        ];
+
+
+    if (!provider) {
+
+        showPlayerError(
+            "Video provider not found."
+        );
+
+        return;
+    }
+
+
+    let url = "";
+
+
+    try {
+
+        url =
+            provider.buildUrl({
+
+                type:
+                    currentMedia.type,
+
+                id:
+                    currentMedia.id,
+
+                season:
+                    currentMedia.type === "tv"
+                        ? Number(activeSeason)
+                        : null,
+
+                episode:
+                    currentMedia.type === "tv"
+                        ? Number(activeEpisode)
+                        : null
+
+            });
+
+    } catch (error) {
+
+        console.error(error);
+
+        showPlayerError(
+            "Could not create the playback URL."
+        );
+
+        return;
 
     }
 
 
-    seasons.forEach(season => {
+    if (!url) {
 
-      const option =
-        document.createElement("option");
+        playerFrame.src = "";
+
+        showPlayerError(
+            `${provider.name} is not configured with an authorized playback URL.`
+        );
+
+        return;
+
+    }
 
 
-      option.value =
-        String(season.season_number);
+    playerError.classList.add(
+        "hidden"
+    );
 
 
-      option.textContent =
-        `Season ${season.season_number} (${season.episode_count} episodes)`;
+    playerFrame.src = url;
+
+}
 
 
-      dom.seasonSelect.appendChild(
-        option
-      );
+/* =========================================================
+   PLAYER ERROR
+========================================================= */
+
+function showPlayerError(message) {
+
+    playerError.textContent =
+        message;
+
+    playerError.classList.remove(
+        "hidden"
+    );
+
+}
+
+
+/* =========================================================
+   CLOSE PLAYER
+========================================================= */
+
+function closePlayerModal() {
+
+    playerFrame.src = "";
+
+    currentMedia = null;
+
+    playerModal.classList.add(
+        "hidden"
+    );
+
+}
+
+
+/* =========================================================
+   RESOLVE CUSTOM ID
+========================================================= */
+
+async function resolveExternalId(
+    rawId
+) {
+
+    const id =
+        rawId.trim();
+
+
+    if (!id) {
+
+        throw new Error(
+            "Enter an IMDb ID or TMDB ID."
+        );
+
+    }
+
+
+    /*
+        IMDb ID
+        Example:
+        tt1234567
+    */
+
+    if (
+        /^tt\d+$/i.test(id)
+    ) {
+
+        const result =
+            await apiRequest(
+                `/find/${encodeURIComponent(id)}`,
+                {
+                    external_source: "imdb_id"
+                }
+            );
+
+
+        if (
+            result.movie_results &&
+            result.movie_results.length
+        ) {
+
+            return normalizeItem(
+                result.movie_results[0],
+                "movie"
+            );
+
+        }
+
+
+        if (
+            result.tv_results &&
+            result.tv_results.length
+        ) {
+
+            return normalizeItem(
+                result.tv_results[0],
+                "tv"
+            );
+
+        }
+
+
+        throw new Error(
+            "IMDb ID was not found."
+        );
+
+    }
+
+
+    /*
+        TMDB numeric ID
+
+        We check movie first, then TV.
+    */
+
+    if (
+        /^\d+$/.test(id)
+    ) {
+
+        try {
+
+            const movie =
+                await apiRequest(
+                    `/movie/${id}`
+                );
+
+
+            if (movie?.id) {
+
+                return normalizeItem(
+                    movie,
+                    "movie"
+                );
+
+            }
+
+        } catch {
+            // Try TV below.
+        }
+
+
+        try {
+
+            const tv =
+                await apiRequest(
+                    `/tv/${id}`
+                );
+
+
+            if (tv?.id) {
+
+                return normalizeItem(
+                    tv,
+                    "tv"
+                );
+
+            }
+
+        } catch {
+            // ID wasn't found.
+        }
+
+
+        throw new Error(
+            "TMDB ID was not found."
+        );
+
+    }
+
+
+    throw new Error(
+        "Use an IMDb ID such as tt1234567 or a numeric TMDB ID."
+    );
+
+}
+
+
+/* =========================================================
+   OPEN CUSTOM ID
+========================================================= */
+
+async function playManualId() {
+
+    const rawId =
+        customIdInput.value.trim();
+
+
+    idError.classList.add(
+        "hidden"
+    );
+
+
+    try {
+
+        const item =
+            await resolveExternalId(
+                rawId
+            );
+
+
+        idModal.classList.add(
+            "hidden"
+        );
+
+
+        customIdInput.value =
+            "";
+
+
+        await selectMedia(
+            item
+        );
+
+
+    } catch (error) {
+
+        idError.textContent =
+            error.message;
+
+
+        idError.classList.remove(
+            "hidden"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   CATEGORY BUTTONS
+========================================================= */
+
+document
+    .querySelectorAll(
+        ".category-btn"
+    )
+    .forEach(button => {
+
+        button.addEventListener(
+            "click",
+            async () => {
+
+                document
+                    .querySelectorAll(
+                        ".category-btn"
+                    )
+                    .forEach(btn => {
+
+                        btn.classList.remove(
+                            "bg-red-600"
+                        );
+
+                        btn.classList.add(
+                            "bg-zinc-800"
+                        );
+
+                    });
+
+
+                button.classList.remove(
+                    "bg-zinc-800"
+                );
+
+                button.classList.add(
+                    "bg-red-600"
+                );
+
+
+                currentQuery = "";
+
+                currentPage = 1;
+
+                currentCategory =
+                    button.dataset.category;
+
+
+                const names = {
+                    trending: "Trending",
+                    movie: "Movies",
+                    tv: "TV Series",
+                    anime: "Anime"
+                };
+
+
+                resultsTitle.textContent =
+                    names[
+                        currentCategory
+                    ] || "CinemaHub";
+
+
+                await loadCategory(
+                    currentCategory,
+                    1,
+                    false
+                );
+
+            }
+        );
 
     });
 
 
-    state.activeSeason =
-      seasons[0].season_number;
+/* =========================================================
+   SEARCH
+========================================================= */
+
+async function performSearch() {
+
+    const query =
+        searchInput.value.trim();
 
 
-    dom.seasonSelect.value =
-      String(state.activeSeason);
+    if (!query) {
+
+        currentQuery = "";
+
+        currentPage = 1;
+
+        resultsTitle.textContent =
+            "Trending";
 
 
-    await loadSeasonEpisodes();
+        await loadCategory(
+            "trending",
+            1,
+            false
+        );
+
+        return;
+    }
 
 
-  } catch (error) {
-
-    console.error(
-      "Season loading error:",
-      error
+    await searchMedia(
+        query,
+        1,
+        false
     );
-
-
-    dom.episodeGrid.textContent =
-      "Unable to load season information.";
-
-  }
 
 }
 
 
-/* ============================================================
-   EPISODES
-============================================================ */
+searchBtn.addEventListener(
+    "click",
+    performSearch
+);
 
-async function loadSeasonEpisodes() {
 
-  if (!state.activeMedia) {
-    return;
-  }
+searchInput.addEventListener(
+    "keydown",
+    event => {
 
+        if (
+            event.key === "Enter"
+        ) {
 
-  if (state.activeMedia.type !== "tv") {
-    return;
-  }
-
-
-  dom.episodeGrid.textContent =
-    "Loading episodes...";
-
-
-  try {
-
-    const data =
-      await apiRequest(
-        `/tv/${state.activeMedia.id}/season/${state.activeSeason}`
-      );
-
-
-    state.episodes =
-      Array.isArray(data.episodes)
-        ? data.episodes
-        : [];
-
-
-    renderEpisodeGrid();
-
-
-  } catch (error) {
-
-    console.error(
-      "Episode loading error:",
-      error
-    );
-
-
-    dom.episodeGrid.textContent =
-      "Unable to load episodes.";
-
-  }
-
-}
-
-
-function renderEpisodeGrid() {
-
-  dom.episodeGrid.replaceChildren();
-
-
-  if (state.episodes.length === 0) {
-
-    dom.episodeGrid.textContent =
-      "No episodes found.";
-
-    return;
-
-  }
-
-
-  state.episodes.forEach(
-    episode => {
-
-      const button =
-        document.createElement("button");
-
-
-      button.type =
-        "button";
-
-
-      button.className =
-        "text-xs px-3 py-1.5 rounded-lg border font-medium transition";
-
-
-      const episodeNumber =
-        Number(
-          episode.episode_number
-        );
-
-
-      if (
-        episodeNumber ===
-        state.activeEpisode
-      ) {
-
-        button.classList.add(
-          "bg-red-600",
-          "border-red-500",
-          "text-white"
-        );
-
-      } else {
-
-        button.classList.add(
-          "bg-zinc-950",
-          "border-zinc-800",
-          "text-zinc-400",
-          "hover:border-zinc-600",
-          "hover:text-white"
-        );
-
-      }
-
-
-      button.textContent =
-        `EP ${episodeNumber}`;
-
-
-      button.title =
-        episode.name ||
-        `Episode ${episodeNumber}`;
-
-
-      button.addEventListener(
-        "click",
-        () => {
-
-          state.activeEpisode =
-            episodeNumber;
-
-          renderEpisodeGrid();
-
-          prepareAuthorizedPlayer(
-            state.activeMedia
-          );
-
-        }
-      );
-
-
-      dom.episodeGrid.appendChild(
-        button
-      );
-
-    }
-  );
-
-}
-
-
-/* ============================================================
-   AUTHORIZED PLAYER
-============================================================ */
-
-function prepareAuthorizedPlayer(
-  media
-) {
-
-  /*
-    This function intentionally does not
-    connect to unauthorized streaming hosts.
-
-    Connect it to your own licensed/authorized
-    playback provider here.
-
-    Example structure:
-
-        const url =
-          YOUR_PROVIDER_URL;
-
-        dom.videoIframe.src = url;
-
-  */
-
-
-  dom.videoIframe.src = "";
-
-  dom.videoIframe.classList.add(
-    "hidden"
-  );
-
-
-  dom.playerMessage.classList.remove(
-    "hidden"
-  );
-
-
-  dom.playerMessage.textContent =
-    media.type === "tv"
-      ? `Ready: ${media.title} - Season ${state.activeSeason}, Episode ${state.activeEpisode}`
-      : `Ready: ${media.title}`;
-
-}
-
-
-/* ============================================================
-   MANUAL ID
-============================================================ */
-
-async function playManualId() {
-
-  const type =
-    dom.manualType.value;
-
-
-  const rawId =
-    dom.manualId.value.trim();
-
-
-  const season =
-    Math.max(
-      1,
-      Number(dom.manualSeason.value) || 1
-    );
-
-
-  const episode =
-    Math.max(
-      1,
-      Number(dom.manualEpisode.value) || 1
-    );
-
-
-  if (!rawId) {
-
-    showError(
-      "Enter a TMDB ID or IMDb ID."
-    );
-
-    return;
-
-  }
-
-
-  dom.launchManualButton.disabled =
-    true;
-
-
-  dom.launchManualButton.textContent =
-    "Loading...";
-
-
-  try {
-
-    let tmdbId = rawId;
-
-
-    /*
-      IMDb IDs start with "tt".
-    */
-
-    if (/^tt\d+$/i.test(rawId)) {
-
-      const externalData =
-        await apiRequest(
-          `/${type === "movie" ? "movie" : "tv"}/external_ids`,
-          {}
-        );
-
-      /*
-        The endpoint above cannot resolve an IMDb ID.
-        Use the dedicated TMDB find endpoint instead.
-      */
-
-      void externalData;
-
-      const findData =
-        await apiRequest(
-          `/find/${encodeURIComponent(rawId)}`,
-          {
-            external_source:
-              "imdb_id"
-          }
-        );
-
-
-      const result =
-        type === "movie"
-          ? findData.movie_results?.[0]
-          : findData.tv_results?.[0];
-
-
-      if (!result) {
-
-        throw new Error(
-          "IMDb ID could not be found on TMDB."
-        );
-
-      }
-
-
-      tmdbId =
-        result.id;
-
-    }
-
-
-    /*
-      TMDB IDs should be numeric.
-    */
-
-    if (
-      !/^\d+$/.test(
-        String(tmdbId)
-      )
-    ) {
-
-      throw new Error(
-        "Invalid TMDB ID."
-      );
-
-    }
-
-
-    let item;
-
-
-    if (type === "movie") {
-
-      const data =
-        await apiRequest(
-          `/movie/${tmdbId}`
-        );
-
-
-      item =
-        normalizeItem(
-          data,
-          "movie"
-        );
-
-    } else {
-
-      const data =
-        await apiRequest(
-          `/tv/${tmdbId}`
-        );
-
-
-      item =
-        normalizeItem(
-          data,
-          "tv"
-        );
-
-    }
-
-
-    if (!item) {
-
-      throw new Error(
-        "Unable to load that title."
-      );
-
-    }
-
-
-    closeManualModal();
-
-
-    await selectMedia(
-      item
-    );
-
-
-    /*
-      If TV, select requested season
-      if it exists.
-    */
-
-    if (type === "tv") {
-
-      const matchingSeason =
-        state.seasons.find(
-          s =>
-            Number(s.season_number) ===
-            season
-        );
-
-
-      if (matchingSeason) {
-
-        state.activeSeason =
-          season;
-
-
-        dom.seasonSelect.value =
-          String(season);
-
-
-        await loadSeasonEpisodes();
-
-
-        const matchingEpisode =
-          state.episodes.find(
-            e =>
-              Number(e.episode_number) ===
-              episode
-          );
-
-
-        if (matchingEpisode) {
-
-          state.activeEpisode =
-            episode;
-
-          renderEpisodeGrid();
-
-          prepareAuthorizedPlayer(
-            state.activeMedia
-          );
+            performSearch();
 
         }
 
-      }
+    }
+);
+
+
+/* =========================================================
+   LOAD MORE
+========================================================= */
+
+loadMoreBtn.addEventListener(
+    "click",
+    loadMore
+);
+
+
+/* =========================================================
+   PLAYER EVENTS
+========================================================= */
+
+closePlayer.addEventListener(
+    "click",
+    closePlayerModal
+);
+
+
+playerModal.addEventListener(
+    "click",
+    event => {
+
+        if (
+            event.target === playerModal
+        ) {
+
+            closePlayerModal();
+
+        }
 
     }
+);
 
 
-  } catch (error) {
+/* =========================================================
+   SEASON CHANGE
+========================================================= */
 
-    console.error(
-      "Manual ID error:",
-      error
-    );
+seasonSelect.addEventListener(
+    "change",
+    async () => {
 
+        activeSeason =
+            Number(
+                seasonSelect.value
+            );
 
-    showError(
-      error.message ||
-      "Unable to load that ID."
-    );
+        activeEpisode = 1;
 
+        await loadEpisodes(
+            currentMedia.id,
+            activeSeason
+        );
 
-  } finally {
+    }
+);
 
-    dom.launchManualButton.disabled =
-      false;
 
-    dom.launchManualButton.textContent =
-      "Load Title";
+/* =========================================================
+   EPISODE CHANGE
+========================================================= */
 
-  }
+episodeSelect.addEventListener(
+    "change",
+    () => {
 
-}
+        activeEpisode =
+            Number(
+                episodeSelect.value
+            );
 
+        updateEpisodeButtons();
 
-/* ============================================================
-   PLAYER CLOSE
-============================================================ */
+        updatePlayerSource();
 
-function closePlayer() {
+    }
+);
 
-  dom.videoIframe.src = "";
 
-  dom.videoIframe.classList.add(
-    "hidden"
-  );
+/* =========================================================
+   CUSTOM ID MODAL
+========================================================= */
 
+cancelId.addEventListener(
+    "click",
+    () => {
 
-  dom.playerMessage.classList.remove(
-    "hidden"
-  );
+        idModal.classList.add(
+            "hidden"
+        );
 
+        idError.classList.add(
+            "hidden"
+        );
 
-  dom.playerContainer.classList.add(
-    "hidden"
-  );
+    }
+);
 
 
-  state.activeMedia = null;
+openId.addEventListener(
+    "click",
+    playManualId
+);
 
-  state.seasons = [];
 
-  state.episodes = [];
+customIdInput.addEventListener(
+    "keydown",
+    event => {
 
-}
+        if (
+            event.key === "Enter"
+        ) {
 
+            playManualId();
 
-/* ============================================================
-   MODAL
-============================================================ */
+        }
 
-function openManualModal() {
+    }
+);
 
-  dom.manualModal.classList.remove(
-    "hidden"
-  );
 
+/* =========================================================
+   ESCAPE KEY
+========================================================= */
 
-  setTimeout(() => {
+document.addEventListener(
+    "keydown",
+    event => {
 
-    dom.manualId.focus();
+        if (
+            event.key === "Escape"
+        ) {
 
-  }, 50);
+            if (
+                !playerModal.classList.contains(
+                    "hidden"
+                )
+            ) {
 
-}
+                closePlayerModal();
 
+            }
 
-function closeManualModal() {
 
-  dom.manualModal.classList.add(
-    "hidden"
-  );
+            if (
+                !idModal.classList.contains(
+                    "hidden"
+                )
+            ) {
 
-}
+                idModal.classList.add(
+                    "hidden"
+                );
 
+            }
 
-/* ============================================================
-   UI HELPERS
-============================================================ */
+        }
 
-function setHeading(text) {
+    }
+);
 
-  dom.sectionHeading.replaceChildren();
 
+/* =========================================================
+   INITIAL LOAD
+========================================================= */
 
-  const dot =
-    document.createElement("span");
+loadCategory(
+    "trending",
+    1,
+    false
+);
 
-
-  dot.className =
-    "w-2.5 h-2.5 rounded-full bg-red-600";
-
-
-  const textNode =
-    document.createTextNode(
-      ` ${text}`
-    );
-
-
-  dom.sectionHeading.appendChild(dot);
-
-  dom.sectionHeading.appendChild(
-    textNode
-  );
-
-}
-
-
-function updateResultsCount(count) {
-
-  if (
-    typeof count !== "number"
-  ) {
-
-    dom.resultsCount.textContent =
-      "";
-
-    return;
-
-  }
-
-
-  dom.resultsCount.textContent =
-    `${count.toLocaleString()} results`;
-
-}
-
-
-function showError(message) {
-
-  dom.errorMessage.textContent =
-    message;
-
-
-  dom.errorMessage.classList.remove(
-    "hidden"
-  );
-
-}
-
-
-function hideError() {
-
-  dom.errorMessage.classList.add(
-    "hidden"
-  );
-
-  dom.errorMessage.textContent =
-    "";
-
-}
-
-
-function showEmptyState(message) {
-
-  const wrapper =
-    document.createElement("div");
-
-
-  wrapper.className =
-    "col-span-full py-16 text-center text-zinc-500";
-
-
-  wrapper.textContent =
-    message;
-
-
-  dom.mediaGrid.appendChild(
-    wrapper
-  );
-
-}
-
-
-function updateLoadButton() {
-
-  dom.loadMoreBtn.disabled =
-    state.isLoading ||
-    !state.hasMore;
-
-
-  if (state.isLoading) {
-
-    dom.loadMoreText.textContent =
-      "Fetching titles...";
-
-    return;
-
-  }
-
-
-  if (!state.hasMore) {
-
-    dom.loadMoreText.textContent =
-      "No More Titles Available";
-
-    return;
-
-  }
-
-
-  dom.loadMoreText.textContent =
-    "Load More Titles";
-
-}
-
-
-/* ============================================================
-   END
-============================================================ */
 </script>
 
 </body>
