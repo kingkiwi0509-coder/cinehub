@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CinemaHub - Movies, TV & Anime</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans selection:bg-red-600 selection:text-white">
+
+  <!-- Top Sticky Navigation (LookMovie / AnimeKai Style) -->
+  <header class="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800/80 px-4 lg:px-8 py-3.5">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-6">
+        <a href="#" class="flex items-center gap-2 group">
+          <div class="w-9 h-9 bg-red-600 rounded-lg flex items-center justify-center font-black text-xl text-white shadow-lg shadow-red-600/30 group-hover:scale-105 transition">
+            ▶
+          </div>
+          <span class="text-xl font-black tracking-wider text-white">CINEMA<span class="text-red-600">HUB</span></span>
+        </a>
+
+        <!-- Category Nav -->
+        <nav class="hidden md:flex items-center gap-1 text-sm font-semibold text-zinc-400">
+          <button onclick="switchTab('trending')" class="nav-tab px-3 py-1.5 rounded-lg text-white bg-zinc-800">Trending</button>
+          <button onclick="switchTab('movie')" class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition">Movies</button>
+          <button onclick="switchTab('tv')" class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition">TV Series</button>
+          <button onclick="switchTab('anime')" class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition">Anime</button>
+        </nav>
+      </div>
+
+      <!-- Quick Search Bar -->
+      <div class="relative flex-1 max-w-md">
+        <input 
+          id="searchInput" 
+          type="text" 
+          placeholder="Search movies, TV shows, anime..." 
+          class="w-full bg-zinc-900 border border-zinc-800 focus:border-red-600 rounded-full pl-10 pr-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none transition shadow-inner"
+        >
+        <span class="absolute left-3.5 top-2.5 text-zinc-500 text-sm">🔍</span>
+      </div>
+
+      <!-- Direct Manual ID Tool -->
+      <button onclick="toggleManualModal()" class="text-xs bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 px-3 py-2 rounded-lg text-zinc-400 hover:text-zinc-200 transition hidden sm:inline-block">
+        Custom ID
+      </button>
+    </div>
+  </header>
+
+  <!-- Video Player Section (Hidden until title selected) -->
+  <section id="playerContainer" class="hidden bg-black border-b border-zinc-800 py-6 px-4">
+    <div class="max-w-6xl mx-auto space-y-4">
+      
+      <!-- Stream Header Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-3 bg-zinc-900/80 p-3 rounded-xl border border-zinc-800">
+        <div class="flex items-center gap-3">
+          <span id="playerTitle" class="font-bold text-base md:text-lg text-white">Select a title</span>
+          <span id="playerBadge" class="text-xs bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded font-mono">HD</span>
+        </div>
+
+        <!-- Server Selector -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-zinc-400 font-medium">Server:</span>
+          <select id="serverSelect" onchange="updatePlayerSource()" class="bg-zinc-950 border border-zinc-700 text-xs rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none focus:border-red-600">
+            <option value="vidsrc_to">VidSrc.to (Fast)</option>
+            <option value="vidsrc_xyz">VidSrc.xyz (Backup 1)</option>
+            <option value="embed_su">Embed.su (Backup 2)</option>
+          </select>
+          <button onclick="closePlayer()" class="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 p-1.5 rounded-lg text-xs">✕ Close</button>
+        </div>
+      </div>
+
+      <!-- Video Aspect Frame -->
+      <div class="relative w-full aspect-video bg-zinc-950 rounded-xl overflow-hidden shadow-2xl border border-zinc-800">
+        <iframe 
+          id="videoIframe" 
+          src="" 
+          class="absolute inset-0 w-full h-full" 
+          allowfullscreen 
+          allow="autoplay; encrypted-media; fullscreen"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+        ></iframe>
+      </div>
+
+      <!-- TV/Anime Episode Navigator (Appears if Series/Anime) -->
+      <div id="episodeControls" class="hidden bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold text-zinc-300">Select Season & Episode</h3>
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-zinc-400">Season:</label>
+            <select id="seasonSelect" onchange="generateEpisodeGrid()" class="bg-zinc-950 border border-zinc-700 text-xs rounded px-2 py-1 text-white"></select>
+          </div>
+        </div>
+        <!-- Episode Buttons Grid (AnimeKai style) -->
+        <div id="episodeGrid" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pt-1"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Grid -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 lg:p-8 space-y-6">
+    <div class="flex items-center justify-between">
+      <h2 id="sectionHeading" class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Popular Titles
+      </h2>
+      <span id="resultsCount" class="text-xs text-zinc-500">Showing top results</span>
+    </div>
+
+    <!-- Media Card Grid -->
+    <div id="mediaGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <!-- Cards dynamically generated via JS -->
+    </div>
+  </main>
+
+  <!-- Manual ID Entry Modal (For developers / edge testing) -->
+  <div id="manualModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-4">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg">Direct ID Player</h3>
+        <button onclick="toggleManualModal()" class="text-zinc-400 hover:text-white">✕</button>
+      </div>
+      <p class="text-xs text-zinc-400">Directly input an IMDb ID (e.g. tt0111161) or TMDb ID to bypass search.</p>
+      
+      <div class="space-y-3">
+        <select id="manualType" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm">
+          <option value="movie">Movie</option>
+          <option value="tv">TV Series / Anime</option>
+        </select>
+        <input id="manualId" type="text" placeholder="IMDb (tt...) or TMDb ID" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm">
+        <div class="grid grid-cols-2 gap-2">
+          <input id="manualSeason" type="number" placeholder="Season" value="1" class="bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm">
+          <input id="manualEpisode" type="number" placeholder="Episode" value="1" class="bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm">
+        </div>
+        <button onclick="playManualId()" class="w-full bg-red-600 hover:bg-red-700 font-bold py-2 rounded-lg text-sm transition">Launch Stream</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-zinc-900 bg-zinc-950 py-6 text-center text-xs text-zinc-600 space-y-1">
+    <p>CinemaHub Directory Prototype. Third-party content indexation demo.</p>
+    <p>We do not store or host any media files on our servers.</p>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    // Public TMDb demo key for indexing metadata and posters
+    const TMDB_KEY = "8414ff0f9a8862700a8459461ae49692";
+    let activeMedia = null; // Currently selected media object
+    let activeSeason = 1;
+    let activeEpisode = 1;
+
+    // Default Curated Fallback Data (Works even without internet API)
+    const fallbackCatalog = [
+      { id: 278, title: "The Shawshank Redemption", type: "movie", rating: 9.3, year: "1994", poster_path: "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg" },
+      { id: 155, title: "The Dark Knight", type: "movie", rating: 9.0, year: "2008", poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg" },
+      { id: 1399, title: "Game of Thrones", type: "tv", rating: 8.4, year: "2011", poster_path: "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg", seasons: 8 },
+      { id: 1429, title: "Attack on Titan", type: "anime", rating: 8.7, year: "2013", poster_path: "/hTP1dtwGFamzeTXppox03mAgpns.jpg", seasons: 4 },
+      { id: 37854, title: "One Piece", type: "anime", rating: 8.9, year: "1999", poster_path: "/cMD9Ygz11yjrtv3fo9MwmoeudIR.jpg", seasons: 20 },
+      { id: 60059, title: "Better Call Saul", type: "tv", rating: 8.7, year: "2015", poster_path: "/fC2HDm5t0kHsf7YbyKyj5Gyg07.jpg", seasons: 6 }
+    ];
+
+    // Initialize App
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchCategory('trending');
+
+      // Live search input handler (debounced)
+      let debounceTimer;
+      document.getElementById('searchInput').addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+        if (query.length > 2) {
+          debounceTimer = setTimeout(() => searchTMDB(query), 400);
+        } else if (query.length === 0) {
+          fetchCategory('trending');
+        }
+      });
+    });
+
+    // Fetch media categories from TMDb
+    async function fetchCategory(category) {
+      let endpoint = '';
+      if (category === 'trending') endpoint = `https://api.themoviedb.org/3/trending/all/day?api_key=${TMDB_KEY}`;
+      if (category === 'movie') endpoint = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}`;
+      if (category === 'tv') endpoint = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_KEY}`;
+      if (category === 'anime') endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&with_genres=16&with_original_language=ja`;
+
+      try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        renderCards(data.results.map(item => normalizeItem(item, category)));
+      } catch (err) {
+        // Fallback to local data on offline/API block
+        renderCards(fallbackCatalog);
+      }
+    }
+
+    // Search query via TMDb
+    async function searchTMDB(query) {
+      try {
+        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        const filtered = data.results
+          .filter(i => i.media_type === 'movie' || i.media_type === 'tv')
+          .map(i => normalizeItem(i, i.media_type));
+        renderCards(filtered);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // Normalize TMDb variations (movie vs tv)
+    function normalizeItem(item, defaultType) {
+      const isTv = item.media_type === 'tv' || defaultType === 'tv' || defaultType === 'anime';
+      return {
+        id: item.id,
+        title: item.title || item.name || "Untitled",
+        type: isTv ? 'tv' : 'movie',
+        rating: item.vote_average ? item.vote_average.toFixed(1) : "7.5",
+        year: (item.release_date || item.first_air_date || "").substring(0, 4) || "2024",
+        poster_path: item.poster_path
+      };
+    }
+
+    // Render Cards in LookMovie / AnimeKai Style Grid
+    function renderCards(items) {
+      const grid = document.getElementById('mediaGrid');
+      grid.innerHTML = '';
+
+      items.forEach(item => {
+        const posterUrl = item.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${item.poster_path}`
+          : 'https://via.placeholder.com/500x750?text=No+Poster';
+
+        const card = document.createElement('div');
+        card.className = "group relative bg-zinc-900 rounded-xl overflow-hidden cursor-pointer border border-zinc-800/80 hover:border-red-600 transition duration-300 flex flex-col";
+        card.onclick = () => selectMedia(item);
+
+        card.innerHTML = `
+          <div class="relative aspect-[2/3] overflow-hidden bg-zinc-950">
+            <img src="${posterUrl}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy">
+            <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60"></div>
+            
+            <!-- Badges -->
+            <span class="absolute top-2 left-2 bg-red-600 text-[10px] font-black uppercase tracking-wider text-white px-1.5 py-0.5 rounded">
+              ${item.type === 'tv' ? 'TV' : 'MOVIE'}
+            </span>
+            <span class="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-yellow-400 text-[11px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 border border-yellow-500/20">
+              ★ ${item.rating}
+            </span>
+
+            <!-- Hover Play Overlay -->
+            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
+              <div class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center text-xl shadow-lg transform group-hover:scale-110 transition">
+                ▶
+              </div>
+            </div>
+          </div>
+
+          <div class="p-3 flex flex-col flex-1 justify-between">
+            <h3 class="text-xs md:text-sm font-bold text-zinc-100 line-clamp-1 group-hover:text-red-500 transition">${item.title}</h3>
+            <p class="text-[11px] text-zinc-500 mt-1">${item.year}</p>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Launch Video Player
+    function selectMedia(item) {
+      activeMedia = item;
+      activeSeason = 1;
+      activeEpisode = 1;
+
+      document.getElementById('playerContainer').classList.remove('hidden');
+      document.getElementById('playerTitle').innerText = item.title;
+      document.getElementById('playerContainer').scrollIntoView({ behavior: 'smooth' });
+
+      const episodeControls = document.getElementById('episodeControls');
+      if (item.type === 'tv') {
+        episodeControls.classList.remove('hidden');
+        setupSeasons(item.seasons || 3);
+      } else {
+        episodeControls.classList.add('hidden');
+      }
+
+      updatePlayerSource();
+    }
+
+    // Setup Season & Episode selectors
+    function setupSeasons(totalSeasons) {
+      const select = document.getElementById('seasonSelect');
+      select.innerHTML = '';
+      for (let s = 1; s <= totalSeasons; s++) {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.innerText = `Season ${s}`;
+        select.appendChild(opt);
+      }
+      generateEpisodeGrid();
+    }
+
+    // AnimeKai style episode buttons
+    function generateEpisodeGrid() {
+      const season = document.getElementById('seasonSelect').value;
+      activeSeason = season;
+      const grid = document.getElementById('episodeGrid');
+      grid.innerHTML = '';
+
+      // Standardize ~12-24 episodes per season
+      const totalEpisodes = 16;
+      for (let e = 1; e <= totalEpisodes; e++) {
+        const btn = document.createElement('button');
+        btn.innerText = `EP ${e}`;
+        btn.className = `text-xs px-3 py-1.5 rounded-lg border font-medium transition ${
+          e === activeEpisode 
+            ? 'bg-red-600 border-red-500 text-white' 
+            : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white'
+        }`;
+        btn.onclick = () => {
+          activeEpisode = e;
+          generateEpisodeGrid();
+          updatePlayerSource();
+        };
+        grid.appendChild(btn);
+      }
+    }
+
+    // Form Embed URL & Update iframe
+    function updatePlayerSource() {
+      if (!activeMedia) return;
+
+      const server = document.getElementById('serverSelect').value;
+      const iframe = document.getElementById('videoIframe');
+      const id = activeMedia.id;
+      let url = '';
+
+      if (server === 'vidsrc_to') {
+        url = activeMedia.type === 'movie' 
+          ? `https://vidsrc.to/embed/movie/${id}`
+          : `https://vidsrc.to/embed/tv/${id}/${activeSeason}/${activeEpisode}`;
+      } else if (server === 'vidsrc_xyz') {
+        url = activeMedia.type === 'movie'
+          ? `https://vidsrc.xyz/embed/movie?tmdb=${id}`
+          : `https://vidsrc.xyz/embed/tv?tmdb=${id}&season=${activeSeason}&episode=${activeEpisode}`;
+      } else if (server === 'embed_su') {
+        url = activeMedia.type === 'movie'
+          ? `https://embed.su/embed/movie/${id}`
+          : `https://embed.su/embed/tv/${id}/${activeSeason}/${activeEpisode}`;
+      }
+
+      iframe.src = url;
+    }
+
+    function closePlayer() {
+      const iframe = document.getElementById('videoIframe');
+      iframe.src = "";
+      document.getElementById('playerContainer').classList.add('hidden');
+      activeMedia = null;
+    }
+
+    // Direct manual launcher
+    function toggleManualModal() {
+      document.getElementById('manualModal').classList.toggle('hidden');
+    }
+
+    function playManualId() {
+      const type = document.getElementById('manualType').value;
+      const id = document.getElementById('manualId').value.trim();
+      const season = document.getElementById('manualSeason').value || 1;
+      const episode = document.getElementById('manualEpisode').value || 1;
+
+      if (!id) return alert("Enter an ID");
+
+      selectMedia({
+        id: id,
+        title: `Manual ID: ${id}`,
+        type: type,
+        seasons: 5
+      });
+      activeSeason = season;
+      activeEpisode = episode;
+      updatePlayerSource();
+      toggleManualModal();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-tab').forEach(b => {
+        b.className = "nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition";
+      });
+      event.target.className = "nav-tab px-3 py-1.5 rounded-lg text-white bg-zinc-800";
+      fetchCategory(tab);
+    }
+  </script>
+</body>
+</html>
