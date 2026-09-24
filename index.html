@@ -6,8 +6,6 @@
   <title>CinemaHub - Movies, TV & Anime</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     /* Custom scrollbars */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -18,7 +16,7 @@
 </head>
 <body class="bg-zinc-950 text-zinc-100 min-h-screen flex flex-col font-sans selection:bg-red-600 selection:text-white">
 
-  <!-- Top Sticky Navigation (LookMovie / AnimeKai Style) -->
+  <!-- Top Navigation (LookMovie / AnimeKai Style) -->
   <header class="sticky top-0 z-40 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800/80 px-4 lg:px-8 py-3.5">
     <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
       
@@ -31,12 +29,14 @@
           <span class="text-xl font-black tracking-wider text-white">CINEMA<span class="text-red-600">HUB</span></span>
         </a>
 
-        <!-- Category Nav -->
+        <!-- Category Tabs -->
         <nav class="hidden md:flex items-center gap-1 text-sm font-semibold text-zinc-400">
           <button onclick="switchTab('trending')" class="nav-tab px-3 py-1.5 rounded-lg text-white bg-zinc-800">Trending</button>
           <button onclick="switchTab('movie')" class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition">Movies</button>
           <button onclick="switchTab('tv')" class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition">TV Series</button>
           <button onclick="switchTab('anime')" class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition">Anime</button>
+          <button onclick="switchTab('action')" class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition">Action</button>
+          <button onclick="switchTab('comedy')" class="nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition">Comedy</button>
         </nav>
       </div>
 
@@ -45,7 +45,7 @@
         <input 
           id="searchInput" 
           type="text" 
-          placeholder="Search movies, TV shows, anime..." 
+          placeholder="Search thousands of titles..." 
           class="w-full bg-zinc-900 border border-zinc-800 focus:border-red-600 rounded-full pl-10 pr-4 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none transition shadow-inner"
         >
         <span class="absolute left-3.5 top-2.5 text-zinc-500 text-sm">🔍</span>
@@ -74,14 +74,14 @@
           <span class="text-xs text-zinc-400 font-medium">Server:</span>
           <select id="serverSelect" onchange="updatePlayerSource()" class="bg-zinc-950 border border-zinc-700 text-xs rounded-lg px-2.5 py-1.5 text-zinc-200 focus:outline-none focus:border-red-600">
             <option value="vidsrc_to">VidSrc.to (Fast)</option>
-            <option value="vidsrc_xyz">VidSrc.xyz (Backup 1)</option>
-            <option value="embed_su">Embed.su (Backup 2)</option>
+            <option value="vidsrc_xyz">VidSrc.xyz (Mirror 1)</option>
+            <option value="embed_su">Embed.su (Mirror 2)</option>
           </select>
           <button onclick="closePlayer()" class="text-zinc-400 hover:text-white bg-zinc-800 hover:bg-zinc-700 p-1.5 rounded-lg text-xs">✕ Close</button>
         </div>
       </div>
 
-      <!-- Video Aspect Frame -->
+      <!-- Video Aspect Frame (Sandbox completely removed to allow playback) -->
       <div class="relative w-full aspect-video bg-zinc-950 rounded-xl overflow-hidden shadow-2xl border border-zinc-800">
         <iframe 
           id="videoIframe" 
@@ -92,7 +92,7 @@
         ></iframe>
       </div>
 
-      <!-- TV/Anime Episode Navigator (Appears if Series/Anime) -->
+      <!-- TV/Anime Episode Navigator -->
       <div id="episodeControls" class="hidden bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-3">
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-zinc-300">Select Season & Episode</h3>
@@ -101,7 +101,7 @@
             <select id="seasonSelect" onchange="generateEpisodeGrid()" class="bg-zinc-950 border border-zinc-700 text-xs rounded px-2 py-1 text-white"></select>
           </div>
         </div>
-        <!-- Episode Buttons Grid (AnimeKai style) -->
+        <!-- Episode Grid -->
         <div id="episodeGrid" class="flex flex-wrap gap-2 max-h-36 overflow-y-auto pt-1"></div>
       </div>
     </div>
@@ -113,23 +113,35 @@
       <h2 id="sectionHeading" class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
         <span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Popular Titles
       </h2>
-      <span id="resultsCount" class="text-xs text-zinc-500">Showing top results</span>
+      <span id="resultsCount" class="text-xs text-zinc-500">Auto-updating catalog</span>
     </div>
 
     <!-- Media Card Grid -->
     <div id="mediaGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
       <!-- Cards dynamically generated via JS -->
     </div>
+
+    <!-- Load More Titles Button -->
+    <div class="flex justify-center pt-8 pb-12">
+      <button 
+        id="loadMoreBtn" 
+        onclick="loadNextPage()" 
+        class="bg-zinc-900 hover:bg-red-600 text-zinc-200 hover:text-white border border-zinc-800 hover:border-red-600 font-bold px-8 py-3 rounded-xl transition duration-200 flex items-center gap-2 shadow-lg hover:scale-105"
+      >
+        <span>Load More Titles</span>
+        <span id="loadSpinner" class="hidden animate-spin">⟳</span>
+      </button>
+    </div>
   </main>
 
-  <!-- Manual ID Entry Modal (For developers / edge testing) -->
+  <!-- Manual ID Entry Modal -->
   <div id="manualModal" class="hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-md w-full p-6 space-y-4">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-lg">Direct ID Player</h3>
         <button onclick="toggleManualModal()" class="text-zinc-400 hover:text-white">✕</button>
       </div>
-      <p class="text-xs text-zinc-400">Directly input an IMDb ID (e.g. tt0111161) or TMDb ID to bypass search.</p>
+      <p class="text-xs text-zinc-400">Directly input an IMDb ID (e.g. tt0111161) or TMDb ID.</p>
       
       <div class="space-y-3">
         <select id="manualType" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg p-2 text-sm">
@@ -148,78 +160,88 @@
 
   <!-- Footer -->
   <footer class="border-t border-zinc-900 bg-zinc-950 py-6 text-center text-xs text-zinc-600 space-y-1">
-    <p>CinemaHub Directory Prototype. Third-party content indexation demo.</p>
+    <p>CinemaHub Directory Prototype. Content indexation demo.</p>
     <p>We do not store or host any media files on our servers.</p>
   </footer>
 
-  <!-- Application Logic -->
+  <!-- Script Engine (JavaScript inside HTML) -->
   <script>
-    // Public TMDb demo key for indexing metadata and posters
     const TMDB_KEY = "8414ff0f9a8862700a8459461ae49692";
-    let activeMedia = null; // Currently selected media object
+    let activeMedia = null;
     let activeSeason = 1;
     let activeEpisode = 1;
 
-    // Default Curated Fallback Data (Works even without internet API)
-    const fallbackCatalog = [
-      { id: 278, title: "The Shawshank Redemption", type: "movie", rating: 9.3, year: "1994", poster_path: "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg" },
-      { id: 155, title: "The Dark Knight", type: "movie", rating: 9.0, year: "2008", poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg" },
-      { id: 1399, title: "Game of Thrones", type: "tv", rating: 8.4, year: "2011", poster_path: "/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg", seasons: 8 },
-      { id: 1429, title: "Attack on Titan", type: "anime", rating: 8.7, year: "2013", poster_path: "/hTP1dtwGFamzeTXppox03mAgpns.jpg", seasons: 4 },
-      { id: 37854, title: "One Piece", type: "anime", rating: 8.9, year: "1999", poster_path: "/cMD9Ygz11yjrtv3fo9MwmoeudIR.jpg", seasons: 20 },
-      { id: 60059, title: "Better Call Saul", type: "tv", rating: 8.7, year: "2015", poster_path: "/fC2HDm5t0kHsf7YbyKyj5Gyg07.jpg", seasons: 6 }
-    ];
+    // Trackers for categories and pagination
+    let currentCategory = 'trending';
+    let currentPage = 1;
+    let currentQuery = '';
 
-    // Initialize App
     window.addEventListener('DOMContentLoaded', () => {
-      fetchCategory('trending');
+      fetchCategory('trending', 1);
 
-      // Live search input handler (debounced)
+      // Debounced live search
       let debounceTimer;
       document.getElementById('searchInput').addEventListener('input', (e) => {
         clearTimeout(debounceTimer);
         const query = e.target.value.trim();
         if (query.length > 2) {
-          debounceTimer = setTimeout(() => searchTMDB(query), 400);
+          debounceTimer = setTimeout(() => {
+            currentQuery = query;
+            currentPage = 1;
+            document.getElementById('sectionHeading').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> Results for "${query}"`;
+            searchTMDB(query, currentPage);
+          }, 400);
         } else if (query.length === 0) {
-          fetchCategory('trending');
+          currentQuery = '';
+          currentPage = 1;
+          switchTab('trending');
         }
       });
     });
 
-    // Fetch media categories from TMDb
-    async function fetchCategory(category) {
+    // Query TMDb with page support
+    async function fetchCategory(category, page = 1) {
       let endpoint = '';
-      if (category === 'trending') endpoint = `https://api.themoviedb.org/3/trending/all/day?api_key=${TMDB_KEY}`;
-      if (category === 'movie') endpoint = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}`;
-      if (category === 'tv') endpoint = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_KEY}`;
-      if (category === 'anime') endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&with_genres=16&with_original_language=ja`;
+      if (category === 'trending') endpoint = `https://api.themoviedb.org/3/trending/all/day?api_key=${TMDB_KEY}&page=${page}`;
+      if (category === 'movie') endpoint = `https://api.themoviedb.org/3/movie/popular?api_key=${TMDB_KEY}&page=${page}`;
+      if (category === 'tv') endpoint = `https://api.themoviedb.org/3/tv/popular?api_key=${TMDB_KEY}&page=${page}`;
+      if (category === 'anime') endpoint = `https://api.themoviedb.org/3/discover/tv?api_key=${TMDB_KEY}&with_genres=16&with_original_language=ja&page=${page}`;
+      if (category === 'action') endpoint = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&with_genres=28&page=${page}`;
+      if (category === 'comedy') endpoint = `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_KEY}&with_genres=35&page=${page}`;
 
       try {
         const res = await fetch(endpoint);
         const data = await res.json();
-        renderCards(data.results.map(item => normalizeItem(item, category)));
+        renderCards(data.results.map(item => normalizeItem(item, category)), page > 1);
       } catch (err) {
-        // Fallback to local data on offline/API block
-        renderCards(fallbackCatalog);
+        console.error("API Error", err);
       }
     }
 
-    // Search query via TMDb
-    async function searchTMDB(query) {
+    // Search query with page support
+    async function searchTMDB(query, page = 1) {
       try {
-        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}`);
+        const res = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB_KEY}&query=${encodeURIComponent(query)}&page=${page}`);
         const data = await res.json();
         const filtered = data.results
           .filter(i => i.media_type === 'movie' || i.media_type === 'tv')
           .map(i => normalizeItem(i, i.media_type));
-        renderCards(filtered);
+        renderCards(filtered, page > 1);
       } catch (e) {
         console.error(e);
       }
     }
 
-    // Normalize TMDb variations (movie vs tv)
+    // "Load More Titles" Button logic
+    function loadNextPage() {
+      currentPage++;
+      if (currentQuery) {
+        searchTMDB(currentQuery, currentPage);
+      } else {
+        fetchCategory(currentCategory, currentPage);
+      }
+    }
+
     function normalizeItem(item, defaultType) {
       const isTv = item.media_type === 'tv' || defaultType === 'tv' || defaultType === 'anime';
       return {
@@ -232,10 +254,9 @@
       };
     }
 
-    // Render Cards in LookMovie / AnimeKai Style Grid
-    function renderCards(items) {
+    function renderCards(items, append = false) {
       const grid = document.getElementById('mediaGrid');
-      grid.innerHTML = '';
+      if (!append) grid.innerHTML = '';
 
       items.forEach(item => {
         const posterUrl = item.poster_path 
@@ -251,7 +272,6 @@
             <img src="${posterUrl}" alt="${item.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy">
             <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-60"></div>
             
-            <!-- Badges -->
             <span class="absolute top-2 left-2 bg-red-600 text-[10px] font-black uppercase tracking-wider text-white px-1.5 py-0.5 rounded">
               ${item.type === 'tv' ? 'TV' : 'MOVIE'}
             </span>
@@ -259,7 +279,6 @@
               ★ ${item.rating}
             </span>
 
-            <!-- Hover Play Overlay -->
             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-300">
               <div class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center text-xl shadow-lg transform group-hover:scale-110 transition">
                 ▶
@@ -276,7 +295,6 @@
       });
     }
 
-    // Launch Video Player
     function selectMedia(item) {
       activeMedia = item;
       activeSeason = 1;
@@ -297,7 +315,6 @@
       updatePlayerSource();
     }
 
-    // Setup Season & Episode selectors
     function setupSeasons(totalSeasons) {
       const select = document.getElementById('seasonSelect');
       select.innerHTML = '';
@@ -310,14 +327,12 @@
       generateEpisodeGrid();
     }
 
-    // AnimeKai style episode buttons
     function generateEpisodeGrid() {
       const season = document.getElementById('seasonSelect').value;
       activeSeason = season;
       const grid = document.getElementById('episodeGrid');
       grid.innerHTML = '';
 
-      // Standardize ~12-24 episodes per season
       const totalEpisodes = 16;
       for (let e = 1; e <= totalEpisodes; e++) {
         const btn = document.createElement('button');
@@ -336,7 +351,6 @@
       }
     }
 
-    // Form Embed URL & Update iframe
     function updatePlayerSource() {
       if (!activeMedia) return;
 
@@ -369,7 +383,6 @@
       activeMedia = null;
     }
 
-    // Direct manual launcher
     function toggleManualModal() {
       document.getElementById('manualModal').classList.toggle('hidden');
     }
@@ -395,37 +408,28 @@
     }
 
     function switchTab(tab) {
+      currentCategory = tab;
+      currentPage = 1;
+      currentQuery = '';
+      document.getElementById('searchInput').value = '';
+      
       document.querySelectorAll('.nav-tab').forEach(b => {
         b.className = "nav-tab px-3 py-1.5 rounded-lg hover:text-white hover:bg-zinc-900 transition";
       });
       event.target.className = "nav-tab px-3 py-1.5 rounded-lg text-white bg-zinc-800";
-      fetchCategory(tab);
+      
+      const titles = {
+        trending: "Trending Titles",
+        movie: "Popular Movies",
+        tv: "Popular TV Shows",
+        anime: "Top Anime Series",
+        action: "Action Movies",
+        comedy: "Comedy Movies"
+      };
+      document.getElementById('sectionHeading').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-red-600"></span> ${titles[tab] || 'Titles'}`;
+      
+      fetchCategory(tab, 1);
     }
   </script>
 </body>
 </html>
-localStorage.setItem('lastWatched', JSON.stringify({
-  id: activeMedia.id,
-  title: activeMedia.title,
-  season: activeSeason,
-  episode: activeEpisode,
-  timestamp: Date.now()
-}));
-// Fetch exact season count and episode list dynamically
-async function loadSeasonData(tvId, seasonNumber) {
-  const res = await fetch(`https://api.themoviedb.org/3/tv/${tvId}/season/${seasonNumber}?api_key=${TMDB_KEY}`);
-  const data = await res.json();
-  
-  // Render exact number of episodes with their actual titles
-  const grid = document.getElementById('episodeGrid');
-  grid.innerHTML = '';
-  data.episodes.forEach(ep => {
-    const btn = document.createElement('button');
-    btn.innerText = `E${ep.episode_number}: ${ep.name}`;
-    btn.onclick = () => {
-      activeEpisode = ep.episode_number;
-      updatePlayerSource();
-    };
-    grid.appendChild(btn);
-  });
-}
