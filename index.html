@@ -55,6 +55,7 @@
             </div>
 
             <div class="flex gap-2 overflow-x-auto scrollbar-hide">
+
                 <button
                     class="category-btn px-4 py-2 rounded-lg bg-red-600"
                     data-category="trending">
@@ -78,9 +79,18 @@
                     data-category="anime">
                     Anime
                 </button>
+
+                <!-- ADDED: Missing opener for the existing Custom ID modal -->
+                <button
+                    id="customIdBtn"
+                    class="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 whitespace-nowrap">
+                    Open ID
+                </button>
+
             </div>
 
             <div class="md:ml-auto flex gap-2">
+
                 <input
                     id="searchInput"
                     type="text"
@@ -93,6 +103,7 @@
                     class="px-4 py-2 bg-red-600 rounded-lg">
                     Search
                 </button>
+
             </div>
 
         </div>
@@ -120,11 +131,13 @@
     </div>
 
     <div class="flex justify-center mt-8">
+
         <button
             id="loadMoreBtn"
             class="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg">
             Load More
         </button>
+
     </div>
 
 </main>
@@ -280,27 +293,57 @@ let currentMedia = null;
 let activeSeason = 1;
 let activeEpisode = 1;
 
+let activeProvider = "provider1";
+
 let isLoading = false;
 
 let searchController = null;
 let categoryController = null;
+let episodeController = null;
+
+/*
+    ADDED:
+    Request IDs prevent older asynchronous requests
+    from overwriting newer results.
+*/
+let catalogRequestId = 0;
+let episodeRequestId = 0;
+let playerRequestId = 0;
 
 
 /* =========================================================
    ELEMENTS
 ========================================================= */
 
-const movieGrid = document.getElementById("movieGrid");
-const loadMoreBtn = document.getElementById("loadMoreBtn");
-const resultsTitle = document.getElementById("resultsTitle");
-const searchInput = document.getElementById("searchInput");
-const searchBtn = document.getElementById("searchBtn");
-const statusMessage = document.getElementById("statusMessage");
+const movieGrid =
+    document.getElementById("movieGrid");
 
-const playerModal = document.getElementById("playerModal");
-const playerFrame = document.getElementById("playerFrame");
-const playerTitle = document.getElementById("playerTitle");
-const closePlayer = document.getElementById("closePlayer");
+const loadMoreBtn =
+    document.getElementById("loadMoreBtn");
+
+const resultsTitle =
+    document.getElementById("resultsTitle");
+
+const searchInput =
+    document.getElementById("searchInput");
+
+const searchBtn =
+    document.getElementById("searchBtn");
+
+const statusMessage =
+    document.getElementById("statusMessage");
+
+const playerModal =
+    document.getElementById("playerModal");
+
+const playerFrame =
+    document.getElementById("playerFrame");
+
+const playerTitle =
+    document.getElementById("playerTitle");
+
+const closePlayer =
+    document.getElementById("closePlayer");
 
 const providerContainer =
     document.getElementById("providerContainer");
@@ -335,6 +378,9 @@ const cancelId =
 const openId =
     document.getElementById("openId");
 
+const customIdBtn =
+    document.getElementById("customIdBtn");
+
 
 /* =========================================================
    VIDEO PROVIDERS
@@ -348,16 +394,21 @@ const VIDEO_PROVIDERS = {
         buildUrl({ type, id, season, episode }) {
 
             if (type === "movie") {
+
                 return `https://vidsrc.to/embed/movie/${encodeURIComponent(id)}`;
+
             }
 
             if (type === "tv") {
+
                 return `https://vidsrc.to/embed/tv/${encodeURIComponent(id)}/${encodeURIComponent(season)}/${encodeURIComponent(episode)}`;
+
             }
 
             return "";
         }
     },
+
 
     provider2: {
         name: "VidSrc XYZ",
@@ -365,16 +416,21 @@ const VIDEO_PROVIDERS = {
         buildUrl({ type, id, season, episode }) {
 
             if (type === "movie") {
+
                 return `https://vidsrc.xyz/embed/movie/${encodeURIComponent(id)}`;
+
             }
 
             if (type === "tv") {
+
                 return `https://vidsrc.xyz/embed/tv/${encodeURIComponent(id)}/${encodeURIComponent(season)}/${encodeURIComponent(episode)}`;
+
             }
 
             return "";
         }
     },
+
 
     provider3: {
         name: "Embed SU",
@@ -382,11 +438,15 @@ const VIDEO_PROVIDERS = {
         buildUrl({ type, id, season, episode }) {
 
             if (type === "movie") {
+
                 return `https://embed.su/embed/movie/${encodeURIComponent(id)}`;
+
             }
 
             if (type === "tv") {
+
                 return `https://embed.su/embed/tv/${encodeURIComponent(id)}/${encodeURIComponent(season)}/${encodeURIComponent(episode)}`;
+
             }
 
             return "";
@@ -394,8 +454,6 @@ const VIDEO_PROVIDERS = {
     }
 
 };
-
-let activeProvider = "provider1";
 
 
 /* =========================================================
@@ -413,10 +471,12 @@ async function apiRequest(
             `${TMDB_API_BASE}${endpoint}`
         );
 
+
     url.searchParams.set(
         "api_key",
         TMDB_KEY
     );
+
 
     Object.entries(params).forEach(
         ([key, value]) => {
@@ -440,6 +500,7 @@ async function apiRequest(
 
     const controller =
         new AbortController();
+
 
     const timeout =
         setTimeout(
@@ -495,9 +556,11 @@ async function apiRequest(
 
         return await response.json();
 
+
     } finally {
 
         clearTimeout(timeout);
+
 
         if (signal) {
 
@@ -524,6 +587,7 @@ function showStatus(
 
     statusMessage.textContent =
         message;
+
 
     statusMessage.classList.remove(
         "hidden",
@@ -584,7 +648,8 @@ function normalizeItem(
 
     return {
 
-        id: item.id,
+        id:
+            item.id,
 
         type,
 
@@ -635,6 +700,7 @@ function createCard(item) {
             "div"
         );
 
+
     card.className =
         "card bg-zinc-900 rounded-xl overflow-hidden cursor-pointer border border-zinc-800 hover:border-red-500";
 
@@ -644,14 +710,18 @@ function createCard(item) {
             "img"
         );
 
+
     image.className =
         "w-full aspect-[2/3] object-cover bg-zinc-800";
+
 
     image.alt =
         item.title;
 
+
     image.loading =
         "lazy";
+
 
     image.src =
         item.poster ||
@@ -663,6 +733,7 @@ function createCard(item) {
             "div"
         );
 
+
     content.className =
         "p-3";
 
@@ -672,8 +743,10 @@ function createCard(item) {
             "h3"
         );
 
+
     title.className =
         "font-semibold truncate";
+
 
     title.textContent =
         item.title;
@@ -684,6 +757,7 @@ function createCard(item) {
             "div"
         );
 
+
     info.className =
         "flex justify-between text-sm text-zinc-400 mt-2";
 
@@ -692,6 +766,7 @@ function createCard(item) {
         document.createElement(
             "span"
         );
+
 
     type.textContent =
         item.type === "tv"
@@ -703,6 +778,7 @@ function createCard(item) {
         document.createElement(
             "span"
         );
+
 
     rating.textContent =
         `★ ${item.rating.toFixed(1)}`;
@@ -755,15 +831,19 @@ function renderCards(
                 "div"
             );
 
+
         empty.className =
             "col-span-full text-center py-16 text-zinc-400";
+
 
         empty.textContent =
             "No results found.";
 
+
         movieGrid.appendChild(
             empty
         );
+
 
         return;
 
@@ -815,10 +895,7 @@ function getCategoryEndpoint(
 
     }
 
-}
-
-
-/* =========================================================
+}/* =========================================================
    LOAD CATEGORY
 ========================================================= */
 
@@ -827,6 +904,20 @@ async function loadCategory(
     page = 1,
     append = false
 ) {
+
+    /*
+        FIX:
+        Cancel any active search so an old search
+        cannot overwrite the category results.
+    */
+
+    if (searchController) {
+
+        searchController.abort();
+        searchController = null;
+
+    }
+
 
     if (categoryController) {
 
@@ -838,10 +929,18 @@ async function loadCategory(
     categoryController =
         new AbortController();
 
-    isLoading = true;
+
+    const requestId =
+        ++catalogRequestId;
+
+
+    isLoading =
+        true;
+
 
     loadMoreBtn.disabled =
         true;
+
 
     loadMoreBtn.textContent =
         "Loading...";
@@ -879,6 +978,16 @@ async function loadCategory(
             );
 
 
+        /*
+            FIX:
+            Ignore stale responses.
+        */
+
+        if (requestId !== catalogRequestId) {
+            return;
+        }
+
+
         const items =
             (data.results || [])
                 .map(item =>
@@ -903,6 +1012,7 @@ async function loadCategory(
         currentCategory =
             category;
 
+
         currentPage =
             page;
 
@@ -921,14 +1031,19 @@ async function loadCategory(
 
         if (
             error.name !==
-            "AbortError"
+            "AbortError" &&
+            requestId === catalogRequestId
         ) {
 
             console.error(error);
 
+
             if (!append) {
+
                 movieGrid.replaceChildren();
+
             }
+
 
             showStatus(
                 "Something went wrong while loading the catalog.",
@@ -939,14 +1054,24 @@ async function loadCategory(
 
     } finally {
 
-        isLoading =
-            false;
+        /*
+            FIX:
+            An old request is no longer allowed
+            to change loading state for a newer request.
+        */
 
-        loadMoreBtn.disabled =
-            false;
+        if (requestId === catalogRequestId) {
 
-        loadMoreBtn.textContent =
-            "Load More";
+            isLoading =
+                false;
+
+            loadMoreBtn.disabled =
+                false;
+
+            loadMoreBtn.textContent =
+                "Load More";
+
+        }
 
     }
 
@@ -963,6 +1088,20 @@ async function searchMedia(
     append = false
 ) {
 
+    /*
+        FIX:
+        Cancel category requests so an old category
+        cannot overwrite search results.
+    */
+
+    if (categoryController) {
+
+        categoryController.abort();
+        categoryController = null;
+
+    }
+
+
     if (searchController) {
 
         searchController.abort();
@@ -973,11 +1112,18 @@ async function searchMedia(
     searchController =
         new AbortController();
 
+
+    const requestId =
+        ++catalogRequestId;
+
+
     isLoading =
         true;
 
+
     loadMoreBtn.disabled =
         true;
+
 
     loadMoreBtn.textContent =
         "Searching...";
@@ -995,6 +1141,16 @@ async function searchMedia(
                 },
                 searchController.signal
             );
+
+
+        /*
+            FIX:
+            Ignore stale search responses.
+        */
+
+        if (requestId !== catalogRequestId) {
+            return;
+        }
 
 
         const items =
@@ -1019,6 +1175,7 @@ async function searchMedia(
         currentQuery =
             query;
 
+
         currentPage =
             page;
 
@@ -1041,10 +1198,12 @@ async function searchMedia(
 
         if (
             error.name !==
-            "AbortError"
+            "AbortError" &&
+            requestId === catalogRequestId
         ) {
 
             console.error(error);
+
 
             showStatus(
                 "Search failed. Try again.",
@@ -1055,14 +1214,24 @@ async function searchMedia(
 
     } finally {
 
-        isLoading =
-            false;
+        /*
+            FIX:
+            Only the newest request controls
+            the loading state.
+        */
 
-        loadMoreBtn.disabled =
-            false;
+        if (requestId === catalogRequestId) {
 
-        loadMoreBtn.textContent =
-            "Load More";
+            isLoading =
+                false;
+
+            loadMoreBtn.disabled =
+                false;
+
+            loadMoreBtn.textContent =
+                "Load More";
+
+        }
 
     }
 
@@ -1075,7 +1244,9 @@ async function searchMedia(
 
 async function loadMore() {
 
-    if (isLoading) return;
+    if (isLoading) {
+        return;
+    }
 
 
     const nextPage =
@@ -1109,6 +1280,21 @@ async function loadMore() {
 
 async function selectMedia(item) {
 
+    /*
+        FIX:
+        Give every newly opened title a new request ID.
+        Old TV requests can no longer overwrite this title.
+    */
+
+    const selectionId =
+        ++playerRequestId;
+
+
+    /*
+        FIX:
+        Reset state when opening a new title.
+    */
+
     currentMedia =
         item;
 
@@ -1118,16 +1304,23 @@ async function selectMedia(item) {
     activeEpisode =
         1;
 
+    activeProvider =
+        "provider1";
+
+
     playerTitle.textContent =
         item.title;
+
 
     playerModal.classList.remove(
         "hidden"
     );
 
+
     playerError.classList.add(
         "hidden"
     );
+
 
     buildProviderButtons();
 
@@ -1138,9 +1331,12 @@ async function selectMedia(item) {
             "hidden"
         );
 
+
         await loadTVDetails(
-            item.id
+            item.id,
+            selectionId
         );
+
 
     } else {
 
@@ -1148,15 +1344,22 @@ async function selectMedia(item) {
             "hidden"
         );
 
+
         updatePlayerSource();
 
     }
 
-}/* =========================================================
+}
+
+
+/* =========================================================
    LOAD TV DETAILS
 ========================================================= */
 
-async function loadTVDetails(tvId) {
+async function loadTVDetails(
+    tvId,
+    selectionId
+) {
 
     try {
 
@@ -1164,6 +1367,23 @@ async function loadTVDetails(tvId) {
             await apiRequest(
                 `/tv/${tvId}`
             );
+
+
+        /*
+            FIX:
+            Don't let an old show's response
+            modify the currently open show.
+        */
+
+        if (
+            selectionId !== playerRequestId ||
+            !currentMedia ||
+            currentMedia.id !== tvId
+        ) {
+
+            return;
+
+        }
 
 
         const seasons =
@@ -1184,12 +1404,15 @@ async function loadTVDetails(tvId) {
                     "option"
                 );
 
+
             option.value =
                 season.season_number;
+
 
             option.textContent =
                 season.name ||
                 `Season ${season.season_number}`;
+
 
             seasonSelect.appendChild(
                 option
@@ -1205,6 +1428,7 @@ async function loadTVDetails(tvId) {
             );
 
             return;
+
         }
 
 
@@ -1228,17 +1452,35 @@ async function loadTVDetails(tvId) {
 
         await loadEpisodes(
             currentMedia.id,
-            activeSeason
+            activeSeason,
+            selectionId
         );
 
 
     } catch (error) {
 
+        if (
+            error.name ===
+            "AbortError"
+        ) {
+
+            return;
+
+        }
+
+
         console.error(error);
 
-        showPlayerError(
-            "Could not load the show's seasons."
-        );
+
+        if (
+            selectionId === playerRequestId
+        ) {
+
+            showPlayerError(
+                "Could not load the show's seasons."
+            );
+
+        }
 
     }
 
@@ -1251,15 +1493,55 @@ async function loadTVDetails(tvId) {
 
 async function loadEpisodes(
     tvId,
-    seasonNumber
+    seasonNumber,
+    selectionId = playerRequestId
 ) {
+
+    /*
+        FIX:
+        Cancel the previous season's episode request.
+    */
+
+    if (episodeController) {
+
+        episodeController.abort();
+
+    }
+
+
+    episodeController =
+        new AbortController();
+
+
+    const requestId =
+        ++episodeRequestId;
+
 
     try {
 
         const data =
             await apiRequest(
-                `/tv/${tvId}/season/${seasonNumber}`
+                `/tv/${tvId}/season/${seasonNumber}`,
+                {},
+                episodeController.signal
             );
+
+
+        /*
+            FIX:
+            Ignore stale episode responses.
+        */
+
+        if (
+            requestId !== episodeRequestId ||
+            selectionId !== playerRequestId ||
+            !currentMedia ||
+            currentMedia.id !== tvId
+        ) {
+
+            return;
+
+        }
 
 
         const episodes =
@@ -1267,6 +1549,7 @@ async function loadEpisodes(
 
 
         episodeSelect.replaceChildren();
+
         episodeGrid.replaceChildren();
 
 
@@ -1278,11 +1561,14 @@ async function loadEpisodes(
                         "option"
                     );
 
+
                 option.value =
                     episode.episode_number;
 
+
                 option.textContent =
                     `Episode ${episode.episode_number}`;
+
 
                 episodeSelect.appendChild(
                     option
@@ -1294,14 +1580,18 @@ async function loadEpisodes(
                         "button"
                     );
 
+
                 button.type =
                     "button";
+
 
                 button.className =
                     "episode-btn px-3 py-2 bg-zinc-800 rounded-lg hover:bg-zinc-700";
 
+
                 button.textContent =
                     episode.episode_number;
+
 
                 button.dataset.episode =
                     episode.episode_number;
@@ -1316,8 +1606,10 @@ async function loadEpisodes(
                                 episode.episode_number
                             );
 
+
                         episodeSelect.value =
                             activeEpisode;
+
 
                         updateEpisodeButtons();
 
@@ -1340,6 +1632,7 @@ async function loadEpisodes(
             activeEpisode =
                 episodes[0].episode_number;
 
+
             episodeSelect.value =
                 activeEpisode;
 
@@ -1348,16 +1641,35 @@ async function loadEpisodes(
 
         updateEpisodeButtons();
 
+
         updatePlayerSource();
 
 
     } catch (error) {
 
+        if (
+            error.name ===
+            "AbortError"
+        ) {
+
+            return;
+
+        }
+
+
         console.error(error);
 
-        showPlayerError(
-            "Could not load episodes."
-        );
+
+        if (
+            requestId === episodeRequestId &&
+            selectionId === playerRequestId
+        ) {
+
+            showPlayerError(
+                "Could not load episodes."
+            );
+
+        }
 
     }
 
@@ -1412,11 +1724,14 @@ function buildProviderButtons() {
             button.type =
                 "button";
 
+
             button.className =
                 "provider-btn px-4 py-2 bg-zinc-800 rounded-lg hover:bg-zinc-700 whitespace-nowrap";
 
+
             button.dataset.provider =
                 providerId;
+
 
             button.textContent =
                 provider.name;
@@ -1557,13 +1872,16 @@ function updatePlayerSource() {
 
             });
 
+
     } catch (error) {
 
         console.error(error);
 
+
         showPlayerError(
             "Could not create the playback URL."
         );
+
 
         return;
 
@@ -1575,9 +1893,11 @@ function updatePlayerSource() {
         playerFrame.src =
             "";
 
+
         showPlayerError(
             `${provider.name} is not configured with an authorized playback URL.`
         );
+
 
         return;
 
@@ -1592,17 +1912,17 @@ function updatePlayerSource() {
     playerFrame.src =
         url;
 
-}
-
-
-/* =========================================================
+}/* =========================================================
    PLAYER ERROR
 ========================================================= */
 
-function showPlayerError(message) {
+function showPlayerError(
+    message
+) {
 
     playerError.textContent =
         message;
+
 
     playerError.classList.remove(
         "hidden"
@@ -1617,11 +1937,50 @@ function showPlayerError(message) {
 
 function closePlayerModal() {
 
+    /*
+        FIX:
+        Cancel pending episode requests and invalidate
+        any pending player-related operations.
+    */
+
+    if (episodeController) {
+
+        episodeController.abort();
+        episodeController = null;
+
+    }
+
+
+    ++playerRequestId;
+    ++episodeRequestId;
+
+
     playerFrame.src =
         "";
 
+
     currentMedia =
         null;
+
+
+    activeSeason =
+        1;
+
+
+    activeEpisode =
+        1;
+
+
+    activeProvider =
+        "provider1";
+
+
+    episodeSelect.replaceChildren();
+
+    seasonSelect.replaceChildren();
+
+    episodeGrid.replaceChildren();
+
 
     playerModal.classList.add(
         "hidden"
@@ -1822,7 +2181,10 @@ async function playManualId() {
 
     }
 
-}/* =========================================================
+}
+
+
+/* =========================================================
    CATEGORY BUTTONS
 ========================================================= */
 
@@ -1852,32 +2214,51 @@ document
 
                     });
 
+
                 button.classList.remove(
                     "bg-zinc-800"
                 );
+
 
                 button.classList.add(
                     "bg-red-600"
                 );
 
-                currentQuery = "";
 
-                currentPage = 1;
+                currentQuery =
+                    "";
+
+
+                currentPage =
+                    1;
+
 
                 currentCategory =
                     button.dataset.category;
 
+
                 const names = {
-                    trending: "Trending",
-                    movie: "Movies",
-                    tv: "TV Series",
-                    anime: "Anime"
+
+                    trending:
+                        "Trending",
+
+                    movie:
+                        "Movies",
+
+                    tv:
+                        "TV Series",
+
+                    anime:
+                        "Anime"
+
                 };
+
 
                 resultsTitle.textContent =
                     names[
                         currentCategory
                     ] || "CinemaHub";
+
 
                 await loadCategory(
                     currentCategory,
@@ -1900,14 +2281,20 @@ async function performSearch() {
     const query =
         searchInput.value.trim();
 
+
     if (!query) {
 
-        currentQuery = "";
+        currentQuery =
+            "";
 
-        currentPage = 1;
+
+        currentPage =
+            1;
+
 
         resultsTitle.textContent =
             "Trending";
+
 
         await loadCategory(
             "trending",
@@ -1915,8 +2302,11 @@ async function performSearch() {
             false
         );
 
+
         return;
+
     }
+
 
     await searchMedia(
         query,
@@ -1993,16 +2383,25 @@ seasonSelect.addEventListener(
     "change",
     async () => {
 
+        if (!currentMedia) {
+            return;
+        }
+
+
         activeSeason =
             Number(
                 seasonSelect.value
             );
 
-        activeEpisode = 1;
+
+        activeEpisode =
+            1;
+
 
         await loadEpisodes(
             currentMedia.id,
-            activeSeason
+            activeSeason,
+            playerRequestId
         );
 
     }
@@ -2017,10 +2416,16 @@ episodeSelect.addEventListener(
     "change",
     () => {
 
+        if (!currentMedia) {
+            return;
+        }
+
+
         activeEpisode =
             Number(
                 episodeSelect.value
             );
+
 
         updateEpisodeButtons();
 
@@ -2034,6 +2439,31 @@ episodeSelect.addEventListener(
    CUSTOM ID MODAL
 ========================================================= */
 
+/*
+    FIX:
+    The modal already existed but had no button to open it.
+*/
+
+customIdBtn.addEventListener(
+    "click",
+    () => {
+
+        idModal.classList.remove(
+            "hidden"
+        );
+
+
+        idError.classList.add(
+            "hidden"
+        );
+
+
+        customIdInput.focus();
+
+    }
+);
+
+
 cancelId.addEventListener(
     "click",
     () => {
@@ -2041,6 +2471,7 @@ cancelId.addEventListener(
         idModal.classList.add(
             "hidden"
         );
+
 
         idError.classList.add(
             "hidden"
@@ -2093,6 +2524,7 @@ document.addEventListener(
                 closePlayerModal();
 
             }
+
 
             if (
                 !idModal.classList.contains(
